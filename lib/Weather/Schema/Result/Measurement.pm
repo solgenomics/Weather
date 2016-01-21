@@ -57,6 +57,12 @@ __PACKAGE__->table("measurement");
   is_foreign_key: 1
   is_nullable: 1
 
+=head2 file_id
+
+  data_type: 'bigint'
+  is_foreign_key: 1
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -77,6 +83,8 @@ __PACKAGE__->add_columns(
   { data_type => "real", is_nullable => 1 },
   "location",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
+  "file_id",
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -92,6 +100,26 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("measurement_id");
 
 =head1 RELATIONS
+
+=head2 file
+
+Type: belongs_to
+
+Related object: L<Weather::Schema::Result::File>
+
+=cut
+
+__PACKAGE__->belongs_to(
+  "file",
+  "Weather::Schema::Result::File",
+  { file_id => "file_id" },
+  {
+    is_deferrable => 0,
+    join_type     => "LEFT",
+    on_delete     => "NO ACTION",
+    on_update     => "NO ACTION",
+  },
+);
 
 =head2 location
 
@@ -134,8 +162,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2016-01-18 22:22:14
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:sL5qib8D+tRNwiR16rxUSw
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2016-01-20 20:35:51
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:fEXUUpagDITJmu5dTXGCug
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
