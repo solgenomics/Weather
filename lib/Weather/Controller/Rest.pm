@@ -18,11 +18,22 @@ sub weather_data : Path('/weather') Args(0) {
     my $c = shift;
     
     my $location = $c->req->param('location');
-    my $station  = $c->req->param('station');
     my $start_date = $c->req->param('start_date');
     my $end_date = $c->req->param('end_date');
 
-    $c->stash->{rest} = { message => 'hello world' };
+    my $location_row = $c->model("Schema::Location")->find({ name => $location });
+    if (!$location_row) { 
+	$c->stash->{rest} = { error => "Unknown location ($location)" };
+	return;
+    }
+	
+    my $data = $c->model("Schema::Measurement")->find({ "-and" => { time => { '-gt' => $start_date }, time => { '-lt' => $end_date} }, location_id => $location_row->location_id() }, { order_by => "time" });
+
+    my @measurements;
+    while (my $row = $data->next()) { 
+	push @measurements, [ $row->time(), $row->value() ]; # add units
+    }
+    $c->stash->{rest} = { data => \@measurements };
 
 }
 
