@@ -96,18 +96,23 @@ my $col = 0;
 
 
 
-my $sn_row = $schema->resultset("Detector")->find_or_create( 
+my $detector_row = $schema->resultset("Detector")->find_or_create( 
     { 
 	identifier => $temp_sensor_sn,
     });
 
+my $detector_id = $detector_row->detector_id();
+
 my $station_name = $opt_s || $opt_l;
 
-my $stations_row = $schema->resultset("Station")->find_or_create(
+my $station_row = $schema->resultset("Station")->find_or_create(
     {
 	name => $station_name,
+	location_id => $location_id,
+	detector_id => $detector_id,
     });
 
+my $station_id = $station_row->station_id();
 
 eval { 
 
@@ -130,21 +135,21 @@ eval {
 	my $temp_cell = $worksheets[0]->get_cell($row, $col + 2);
 	if ($temp_cell) { 
 	    $temp_value = $temp_cell->value();
-	    insert_measurement($schema, $file_id, $temp_cvterm_id, $location_id, $time_value, $temp_value);
+	    insert_measurement($schema, $file_id, $temp_cvterm_id, $station_id, $time_value, $temp_value);
 	}
 	
 	my $rh_value;
 	my $rh_cell = $worksheets[0]->get_cell($row, $col + 3);
 	if ($rh_cell) { 
 	    $rh_value = $rh_cell->value();
-	    insert_measurement($schema, $file_id, $rh_cvterm_id, $location_id, $time_value, $rh_value);
+	    insert_measurement($schema, $file_id, $rh_cvterm_id, $station_id, $time_value, $rh_value);
 	}
 	
 	my $dp_value;
 	my $dp_cell = $worksheets[0]->get_cell($row, $col + 4);
 	if ($dp_cell) { 
 	    $dp_value = $dp_cell->value();
-	    insert_measurement($schema, $file_id, $dp_cvterm_id, $location_id,  $time_value, $dp_value);
+	    insert_measurement($schema, $file_id, $dp_cvterm_id, $station_id,  $time_value, $dp_value);
 	}
 	$row++;
     }
@@ -168,7 +173,7 @@ eval {
 	my $intensity_value;
 	if ($intensity_cell) { 
 	    $intensity_value = $intensity_cell->value();
-	    insert_measurement($schema, $file_id, $intensity_cvterm_id, $location_id, $time_value, $intensity_value);
+	    insert_measurement($schema, $file_id, $intensity_cvterm_id, $station_id, $time_value, $intensity_value);
 	}
 	$row++;
     }
@@ -194,7 +199,7 @@ eval {
 	if ($precipitation_cell) { 
 	    $precipitation_value = $precipitation_cell->value();
 	    
-	    insert_measurement($schema, $file_id, $precipitation_cvterm_id, $location_id, $time_value, $precipitation_value);
+	    insert_measurement($schema, $file_id, $precipitation_cvterm_id, $station_id, $time_value, $precipitation_value);
 	    
 	 
 	}
@@ -229,7 +234,7 @@ sub insert_measurement {
     my $schema = shift;
     my $file_id = shift;
     my $cvterm_id = shift;
-    my $location_id = shift;
+    my $station_id = shift;
     my $time = shift;
     my $value = shift;
 
@@ -240,6 +245,7 @@ sub insert_measurement {
 	    type_id => $cvterm_id,
 	    value => $value,
 	    file_id => $file_id,
+	    station_id => $station_id,
 	});
     
     
