@@ -35,6 +35,12 @@ sub index :Path :Args(0) {
     $c->stash->{template} = 'index.mas';
 }
 
+sub weather :Path('/weather') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = '/weather.mas';
+}
+
 =head2 default
 
 Standard 404 error page

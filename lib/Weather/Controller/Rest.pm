@@ -13,7 +13,7 @@ __PACKAGE__->config(
 
 
 
-sub weather_data : Path('/weather') Args(0) { 
+sub weather_data : Path('/rest/weather') Args(0) { 
     my $self = shift;
     my $c = shift;
     
@@ -27,11 +27,11 @@ sub weather_data : Path('/weather') Args(0) {
 	return;
     }
 	
-    my $data = $c->model("Schema::Measurement")->find({ "-and" => { time => { '-gt' => $start_date }, time => { '-lt' => $end_date} }, location_id => $location_row->location_id() }, { order_by => "time" });
+    my $data = $c->model("Schema::Measurement")->search({ -and => [ 'time' => { '>' => $start_date }, 'time' => { '<' => $end_date} ], location_id => $location_row->location_id() }, { order_by => "time" });
 
     my @measurements;
     while (my $row = $data->next()) { 
-	push @measurements, [ $row->time(), $row->value() ]; # add units
+	push @measurements, [ { name => $row->time(), value => $row->value() } ]; # add units
     }
     $c->stash->{rest} = { data => \@measurements };
 
