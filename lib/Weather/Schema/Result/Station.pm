@@ -47,6 +47,12 @@ __PACKAGE__->table("station");
   is_foreign_key: 1
   is_nullable: 1
 
+=head2 location_id
+
+  data_type: 'bigint'
+  is_foreign_key: 1
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -62,6 +68,8 @@ __PACKAGE__->add_columns(
   "coordinates",
   { data_type => "point", is_nullable => 1 },
   "detector_id",
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
+  "location_id",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
 );
 
@@ -99,9 +107,44 @@ __PACKAGE__->belongs_to(
   },
 );
 
+=head2 location
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2016-01-18 22:22:14
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:vp+ok1L5/ZYJtLZmmWwUrw
+Type: belongs_to
+
+Related object: L<Weather::Schema::Result::Location>
+
+=cut
+
+__PACKAGE__->belongs_to(
+  "location",
+  "Weather::Schema::Result::Location",
+  { location_id => "location_id" },
+  {
+    is_deferrable => 0,
+    join_type     => "LEFT",
+    on_delete     => "NO ACTION",
+    on_update     => "NO ACTION",
+  },
+);
+
+=head2 measurements
+
+Type: has_many
+
+Related object: L<Weather::Schema::Result::Measurement>
+
+=cut
+
+__PACKAGE__->has_many(
+  "measurements",
+  "Weather::Schema::Result::Measurement",
+  { "foreign.station_id" => "self.station_id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
+
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2016-01-26 14:56:49
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:t9Gtq/whjbDCQHfCkN876A
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

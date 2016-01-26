@@ -51,13 +51,13 @@ __PACKAGE__->table("measurement");
   data_type: 'real'
   is_nullable: 1
 
-=head2 location
+=head2 file_id
 
   data_type: 'bigint'
   is_foreign_key: 1
   is_nullable: 1
 
-=head2 file_id
+=head2 station_id
 
   data_type: 'bigint'
   is_foreign_key: 1
@@ -81,9 +81,9 @@ __PACKAGE__->add_columns(
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
   "value",
   { data_type => "real", is_nullable => 1 },
-  "location",
-  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
   "file_id",
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
+  "station_id",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
 );
 
@@ -121,18 +121,18 @@ __PACKAGE__->belongs_to(
   },
 );
 
-=head2 location
+=head2 station
 
 Type: belongs_to
 
-Related object: L<Weather::Schema::Result::Location>
+Related object: L<Weather::Schema::Result::Station>
 
 =cut
 
 __PACKAGE__->belongs_to(
-  "location",
-  "Weather::Schema::Result::Location",
-  { location_id => "location" },
+  "station",
+  "Weather::Schema::Result::Station",
+  { station_id => "station_id" },
   {
     is_deferrable => 0,
     join_type     => "LEFT",
@@ -162,8 +162,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2016-01-20 20:35:51
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:fEXUUpagDITJmu5dTXGCug
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2016-01-26 14:56:49
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:RXNMoinG32XBGtmmQ1yZpA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

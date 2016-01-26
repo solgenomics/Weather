@@ -71,24 +71,24 @@ __PACKAGE__->set_primary_key("location_id");
 
 =head1 RELATIONS
 
-=head2 measurements
+=head2 stations
 
 Type: has_many
 
-Related object: L<Weather::Schema::Result::Measurement>
+Related object: L<Weather::Schema::Result::Station>
 
 =cut
 
 __PACKAGE__->has_many(
-  "measurements",
-  "Weather::Schema::Result::Measurement",
-  { "foreign.location" => "self.location_id" },
+  "stations",
+  "Weather::Schema::Result::Station",
+  { "foreign.location_id" => "self.location_id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07033 @ 2016-01-18 22:22:14
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:JcTmuR5L7LwAtU1eVZfBdg
+# Created by DBIx::Class::Schema::Loader v0.07033 @ 2016-01-26 14:56:49
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:xqamppGzZTfZ0dOv2JWUAg
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
