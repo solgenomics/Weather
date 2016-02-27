@@ -1,4 +1,48 @@
 
+=head1 NAME
+
+load_weather.pl - load the weather data from small weather stations
+
+=head1 DESCRIPTION
+
+perl load_weather.pl -H <hostname> -D <database_name> -U <database_user> -i <input_file.xls> -l <location>
+
+Options:
+ 
+=over 5
+
+=item -H
+
+hostname
+
+=item -D
+
+database name
+
+=item -U
+
+database user
+
+=item -i
+
+input file name (xls format)
+
+=item -l
+
+location name
+
+=item -s
+
+station name (optional)
+
+=back
+
+
+=head1 
+
+
+=cut 
+
 use strict;
 
 use Getopt::Std;
@@ -169,7 +213,7 @@ eval {
 	    next();
 	}
 	
-	my $intensity_cell = $worksheets[1]->get_cell($row, $col+2);
+	my $intensity_cell = $worksheets[1]->get_cell($row, $col+3);
 	my $intensity_value;
 	if ($intensity_cell) { 
 	    $intensity_value = $intensity_cell->value();
@@ -195,7 +239,7 @@ eval {
 	}
 	
 	my $precipitation_value;
-	my $precipitation_cell = $worksheets[2]->get_cell($row, $col+2);
+	my $precipitation_cell = $worksheets[2]->get_cell($row, $col+3);
 	if ($precipitation_cell) { 
 	    $precipitation_value = $precipitation_cell->value();
 	    
