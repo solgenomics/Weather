@@ -1,0 +1,56 @@
+
+<%args>
+
+</%args>
+
+
+<style>
+.chart rect {
+  fill: steelblue;
+}
+
+.chart text {
+  fill: white;
+  font: 10px sans-serif;
+  text-anchor: middle;
+}
+
+</style>
+
+<h1>Query weather database</h1>
+
+<script>
+$(document).ready(function () {
+
+  initialize_events();
+
+
+});
+  </script>
+
+<div id="input_form">
+<table>
+<tr><td>Location:</td><td><select id="location_select"><option>Namulonge</option></select></td>
+<td>Start Date:</td><td><input type="text" id="start_datepicker"></td>
+<td>End Date:</td><td><input type="text" id="end_datepicker"></td></tr>
+</table>
+
+<!-- h4>Show:</h4>
+<input type="radio" name="type" value="Temperature" checked="1" />Temperature<br />
+<input type="radio" name="type" value="Relative Humidity" />Relative Humidity<br />
+<input type="radio" name="type" value="Dew Point"  />Dew Point<br />
+<input type="radio" name="type" value="Intensity"  />Light Intensity<br />
+<input type="radio" name="type" value="Precipitation"  />Precipitation<br / -->
+<br />
+<h1>Interval</h1>
+<input type="radio" name="interval" value="hour" />Hourly<br/>
+<input type="radio" name="interval" value="day" />Day<br />
+<br />
+<button id="submit">Submit</button>
+</div>
+
+<div id="chart_area">
+[chart goes here...]
+<svg class="chart"></svg>
+</div>
+

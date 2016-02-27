@@ -3,6 +3,9 @@ package Weather::Controller::Rest;
 
 use Moose;
 
+use Data::Dumper;
+use List::Util qw | max min |;
+
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
@@ -12,6 +15,7 @@ __PACKAGE__->config(
    );
 
 
+use Weather::Data;
 
 sub weather_data : Path('/rest/weather') Args(0) { 
     my $self = shift;
@@ -20,21 +24,21 @@ sub weather_data : Path('/rest/weather') Args(0) {
     my $location = $c->req->param('location');
     my $start_date = $c->req->param('start_date');
     my $end_date = $c->req->param('end_date');
+    my $interval = $c->req->param('interval');
+    my $type = $c->req->param('type');
 
-    my $location_row = $c->model("Schema::Location")->find({ name => $location });
-    if (!$location_row) { 
-	$c->stash->{rest} = { error => "Unknown location ($location)" };
-	return;
-    }
-	
-    my $data = $c->model("Schema::Measurement")->search({ -and => [ 'time' => { '>' => $start_date }, 'time' => { '<' => $end_date} ], location_id => $location_row->location_id() }, { order_by => "time" });
+    my $wd = Weather::Data->new( 
+	{ 
+	    schema => $c->model("Schema")->schema(),
+	    location => $location,
+	    type => $type,
+	    start_date => $start_date,
+	    end_date => $end_date,
+	    interval => $interval,
+	});
 
-    my @measurements;
-    while (my $row = $data->next()) { 
-	push @measurements, [ { name => $row->time(), value => $row->value() } ]; # add units
-    }
-    $c->stash->{rest} = { data => \@measurements };
-
+    $c->stash->{rest} = $wd->get_data();
+       
 }
 
 1;
