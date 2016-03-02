@@ -1,7 +1,7 @@
 
 function initialize_events() { 
 
-    alert('Initializing date_pickers...');
+    //alert('Initializing date_pickers...');
 
     $(function() {
 	$("#start_datepicker").datepicker( { 
@@ -38,7 +38,7 @@ function initialize_events() {
 	
 	jQuery('#chart_area').html("");
 	for(var n = 0; n<types.length; n++) { 
-	    alert("Getting data for "+types[n]);
+	    //alert("Getting data for "+types[n]);
 	     data = get_data(location, start_date, end_date, interval, types[n]);
 	}
     });
@@ -54,7 +54,7 @@ function get_data(location, start_date, end_date, interval, type) {
 	    }
 	    else { 
 		var s = JSON.stringify(response);
-		alert(s);
+		//alert(s);
 		
 		graph(response.data, response.domain_x, response.domain_y);
 	    }
@@ -111,7 +111,7 @@ function graph(data) {
     var yAxis = d3.svg.axis()
 	.scale(y)
 	.orient("left")
-	.ticks(10);
+	.ticks(5);
     
     var svg = d3.select("#chart_area").append("svg")
 	.attr("width", width + margin.left + margin.right)
