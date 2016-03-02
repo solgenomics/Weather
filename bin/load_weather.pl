@@ -158,6 +158,7 @@ my $station_row = $schema->resultset("Station")->find_or_create(
 
 my $station_id = $station_row->station_id();
 
+my $old_precipitation_value =0;
 eval { 
 
     print STDERR "Inserting worksheet 1...\n";
@@ -243,12 +244,15 @@ eval {
 	if ($precipitation_cell) { 
 	    $precipitation_value = $precipitation_cell->value();
 	    
+	    $precipitation_value = $precipitation_value - $old_precipitation_value;
 	    insert_measurement($schema, $file_id, $precipitation_cvterm_id, $station_id, $time_value, $precipitation_value);
 	    
+	    $old_precipitation_value = $precipitation_value;
 	 
 	}
 	else { 
-	    print STDERR "No value for precipitation on line $index. Skipping.\n";
+	    print STDERR "No value for preciptation... adding 0.\n";
+	    insert_measurement($schema, $file_id, $precipitation_cvterm_id, $station_id, $time_value, 0);
 	}
 	$row++;
     }
