@@ -98,6 +98,7 @@ sub get_data {
 	push @dates, "$year-$month-$day $time";
 	$index++;
     }	
+
     
     print STDERR "Measurements: ".Dumper(\@measurements);
     return { 
@@ -105,6 +106,61 @@ sub get_data {
 	domain_y => [ 0, $avg_max ],
 	domain_x => [ @dates ],
     };
+
+}
+
+sub calculate_sun_rise_sun_set { 
+    my $class = shift;
+    my $location_id = shift;
+
+    my $schema = shift;
+
+    my $type_row = $schema->resultset("Cvterm")->find( { name => "Intensity" });
+    my $sunrise_row = $schema->resultset("Cvterm")->find( { name => "Sunrise" });
+    my $sunset_row = $schema->resultset("Cvterm")->find( { name => "Sunset" });
+    
+    my $q = "SELECT time, value from measurement where location = ? and type_id = ?";
+    
+    
+    my $h = $schema->storage()->dbh()->prepare($q);
+
+    $h->execute($location_id, $type_row->cvterm_id());
+
+    my $intensities = $h->fetchall_arrayref();
+    
+    my $event = "";
+    my $previous_phase = "";
+    foreach my $i (@$intensities) { 
+	my $current_phase = "";
+	if ($i->[1] == 0) { $current_phase = "night"; }
+	else { 
+	    $current_phase = "day"; 
+	}
+	if ( ($current_phase ne $previous_phase) && $current_phase eq "night") { 
+	    $event = "Sunset";
+	}
+	if ( ($current_phase ne $previous_phase) && $current_phase eq "day") { 
+	    $event = "Sunrise";
+	}
+	
+	
+	    
+    }
+
+    my $uq = "UPDATE measurement set daylight=true WHERE time >= ? - extract(minute from '0:15'::Date) and time <= ?";
+    my $qh  = $schema->storage()->dbh()->prepare($uq);
+    
+    print STDERR "\n";
+
+}
+
+sub day_length { 
+    my $self = shift;
+    $self->set_type("intensity");
+    my $data = $self->_get_data();
+    
+
+
 
 }
 
