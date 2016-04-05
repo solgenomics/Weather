@@ -10,16 +10,16 @@
   <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
   <script src="/static/js/Weather.js"></script>
   <script src="/static/js/Histogram.js"></script>
-  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/metrics-graphics/2.8.0/metricsgraphics.min.js"></script>
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/metrics-graphics/2.8.0/metricsgraphics.min.css">
 </head>
 <body>
   <center>
-    <table width="800px" ><tr><td>  
-	  
+    <table width="800px" ><tr><td>
+
 	  <table><tr><td><a href="/" alt="Home"><img src="/static/img/weather_db_logo_small.png" width="40"/></a></td><td>&nbsp;</td><td>
 		<font style="font-family:arial,helvetica,sans-serif;font-weight:bold;font-size:24pt;color:lightblue;">Weather Database</font><br />
 	      </td><td width="400" align="right"><a href="/weather/">Query</a> | <a href="/help">Help</a> | <a href="/about">About</a> </td></tr></table>
-	  
+
       </td></tr>
       <tr><td>
-	  

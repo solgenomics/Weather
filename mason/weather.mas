@@ -24,6 +24,19 @@ $(document).ready(function () {
 
   initialize_events();
 
+  d3.json('/static/ufo-sightings.json', function(data) {
+    MG.data_graphic({
+        title: "UFO Sightings",
+        description: "Yearly UFO sightings from the year 1945 to 2010.",
+        data: data,
+        width: 650,
+        height: 150,
+        target: '#ufo-sightings',
+        x_accessor: 'year',
+        y_accessor: 'sightings',
+        markers: [{'year': 1964, 'label': '"The Creeping Terror" released'}]
+    })
+})
 
 });
   </script>
@@ -48,9 +61,8 @@ $(document).ready(function () {
 <br />
 <button id="submit">Submit</button>
 </div>
-
-<div id="chart_area">
+<div id = "ufo-sightings"></div>
+<div id = "chart_area">
 [chart goes here...]
 <svg class="chart"></svg>
 </div>
-
