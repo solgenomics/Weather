@@ -2,16 +2,19 @@
 <html>
 <head>
   <title>Weather Database</title>
-  <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
 
-  <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-  <link rel="stylesheet" href="/static/weather.css" type="text/css" />
   <script src="//code.jquery.com/jquery-1.10.2.js"></script>
   <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.0/d3.min.js' charset='utf-8'></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/metrics-graphics/2.8.0/metricsgraphics.min.js"></script>
   <script src="/static/js/Weather.js"></script>
   <script src="/static/js/Histogram.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/metrics-graphics/2.8.0/metricsgraphics.min.js"></script>
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+  <link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
   <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/metrics-graphics/2.8.0/metricsgraphics.min.css">
+  <link rel="stylesheet" href="/static/weather.css" type="text/css" />
+
 </head>
 <body>
   <center>
