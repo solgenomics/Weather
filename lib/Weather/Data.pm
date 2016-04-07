@@ -4,7 +4,6 @@ package Weather::Data;
 use Moose;
 
 use Data::Dumper;
-use JSON::PP;
 
 has 'schema' => (isa => 'Weather::Schema',
 		 is => 'rw',
@@ -62,12 +61,13 @@ sub get_data {
 		my $type_ref = $self->types();
 		my @types = @$type_ref;
 		print STDERR "Types = @types \n";
-		my $data = {};
+		my $values = {};
+		my @stats;
 
 		my $time_selects = {
 			minutes => "time,",
-			hour => "date_trunc('hour', time) AS time,",
-			day => "date_trunc('day', time) AS time,"
+			hours => "date_trunc('hour', time) AS time,",
+			days => "date_trunc('day', time) AS time,"
 		};
 
 		my $value_selects = {
@@ -98,16 +98,22 @@ sub get_data {
     	}
 			print STDERR "Measurements for $type: ".Dumper(\@measurements);
 
-			$data -> {$type} = \@measurements;
+			my $summary_q = "SELECT min(value), max(value), avg(value), stddev(value), sum(value) FROM (" . $q . ") base_query";
+
+			print STDERR "Summary query= $summary_q";
+
+			$h = $self->schema()->storage()->dbh()->prepare($summary_q);
+    	$h->execute($self->start_date, $self->end_date, $type_id, $station_ids_str);
+			my ($min, $max, $average, $std_dev, $total) = $h->fetchrow_array();
+			print STDERR "average for $type = $average \n";
+
+			push @stats, [ $type, $min, $max, $average, $std_dev, $total];
+			$values -> {$type} = \@measurements;
 		}
 
-		print STDERR Dumper($data);
-		#my $json_data = encode_json $data;
-		#print STDERR "now encoded: " . Dumper($json_data);
-
 		return {
-			data => $data
-			#data => $json_data
+			stats => \@stats,
+			values => $values
     };
 
 }

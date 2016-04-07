@@ -3,7 +3,7 @@ function initialize_events() {
 
   //alert('Initializing date_pickers...');
 
-  $(function() {
+/*  $(function() {
     $("#start_datepicker").datepicker( {
       'dateFormat' : "yy-mm-dd",
       changeMonth: true,
@@ -25,12 +25,33 @@ function initialize_events() {
 //	    }
 	});
     });
+*/
+
+  var start_date;
+  var end_date;
+
+    $('input[name="daterange"]').daterangepicker(
+      {
+          startDate: moment().subtract('days', 29),
+          endDate: moment(),
+      },
+      function(start, end) {
+        start_date = start.format('YYYY-MM-DD');
+        console.log("start="+start);
+        end_date = end.format('YYYY-MM-DD');
+        console.log("end="+end);
+      }
+    );
 
     $('#submit').click( function() {
 	     var location = $('#location_select').val();
-       var start_date = $('#start_datepicker').val();
-       var end_date = $('#end_datepicker').val();
-       var interval = $('input:radio[name=interval]:checked').val();
+       //var start_date = $('#daterange').val(picker.startDate.format('YYYY-MM-DD'));
+       //var end_date = $('#daterange').val(picker.endDate.format('YYYY-MM-DD')); //$('#start_datepicker').val();
+       console.log(start_date+" till "+end_date);
+       //var end_date = $('#end_datepicker').val();
+       var types = $('#types').val() || [];
+       var interval = $('#interval').val();
+       console.log("types = "+types);
        //var type = $('input:radio[name=type]:checked').val();
 
        //alert(start_date+ ' '+end_date + ' '+ location + ' '+ type);
@@ -43,18 +64,13 @@ function initialize_events() {
          precipitation: ['Precipitation', 'Precipitation totals in mm, as gathered by HOBO weather station', '#428bca']
        };
 
-       jQuery('#chart_area').html("");
-       var types =[];
-       for (var key in type_data) {
-         types.push(key);
-       }
-       //for(var n = 0; n<type_data.length; n++) {
-         //alert("Getting data for "+types[n]);
-         //types.push(type_data[n][1]);
-         //data = get_data(location, start_date, end_date, interval, types[n]);
-       //}
-
+       jQuery('#temperature').html("");
+       jQuery('#intensity').html("");
+       jQuery('#dew_point').html("");
+       jQuery('#relative_humidity').html("");
+       jQuery('#precipitation').html("");
        var data = get_data(location, start_date, end_date, interval, type_data, types);
+
     });
 }
 
@@ -68,9 +84,10 @@ function get_data(location, start_date, end_date, interval, type_data, types) {
         alert(response.error);
 	    }
 	    else {
-        console.log("response data = "+response.data);
-        //display_summary_statistics(data);
-        display_timeseries(response.data, type_data);
+        console.log("response values = "+JSON.stringify(response.values));
+        console.log("response stats = "+JSON.stringify(response.stats));
+        display_summary_statistics(response.stats);
+        display_timeseries(response.values, type_data);
 	    }
     },
     error: function(response) {
@@ -79,6 +96,20 @@ function get_data(location, start_date, end_date, interval, type_data, types) {
   });
 }
 
+function display_summary_statistics(data) {
+  $('#summary_stats').DataTable( {
+    data: data,
+    destroy: true,
+    columns: [
+      { title: "Measurement Type" },
+      { title: "Minimum" },
+      { title: "Maximum" },
+      { title: "Average" },
+      { title: "Std Deviation" },
+      { title: "Total Sum" }
+    ]
+  } );
+}
 function display_timeseries(data, type_data) {
   //for ( var i = 0; i < data.length; i++) {
     //  var measurements = data[i];

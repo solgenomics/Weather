@@ -26,12 +26,6 @@ sub weather_data : Path('/rest/weather') Args(0) {
     my $end_date = $c->req->param('end_date');
     my $interval = $c->req->param('interval');
     my @types = $c->req->param('types[]');
-    #print STDERR Dumper(@types);
-    #my @test_types;
-    #foreach my $type (@types) {
-    #  print "one type is $type \n";
-    #  push @test_types, $type;
-    #}
 
     my $wd = Weather::Data->new(
 	{

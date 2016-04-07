@@ -30,8 +30,7 @@ $(document).ready(function () {
 <div id="input_form">
 <table>
 <tr><td>Location:</td><td><select id="location_select"><option>Namulonge</option></select></td>
-<td>Start Date:</td><td><input type="text" id="start_datepicker"></td>
-<td>End Date:</td><td><input type="text" id="end_datepicker"></td></tr>
+<input type="text" name="daterange" value="01/01/2015 - 01/31/2015" />
 </table>
 
 <!-- h4>Show:</h4>
@@ -41,13 +40,28 @@ $(document).ready(function () {
 <input type="radio" name="type" value="Intensity"  />Light Intensity<br />
 <input type="radio" name="type" value="Precipitation"  />Precipitation<br / -->
 <br />
+<h1>Measurement Types</h1>
+<select multiple="" class="form-control" id="types" name="1" size="10" style="min-width: 200px;overflow:auto;">
+<option value="temperature" title="Temperature">Temperature
+</option><option value="intensity" title="Intensity">Intensity
+</option><option value="dew_point" title="Dew Point">Dew Point
+</option><option value="relative_humidity" title="Relative Humidity">Relative Humidity
+</option><option value="precipitation" title="Precipitation">Precipitation
+</option></select>
 <h1>Interval</h1>
-<input type="radio" name="interval" value="hour" />Hourly<br/>
-<input type="radio" name="interval" value="day" />Day<br />
+<select class="form-control input-sm" id="interval" >
+<option value="">Select an interval
+</option><option value="minutes">Individual measurements
+</option><option value="hours">Hourly averages
+</option><option value="days">Daily averages
+</option></select>
+
 <br />
 <button id="submit">Submit</button>
 </div>
-<div id="time3"></div>
+<br/>
+<table id="summary_stats" class="display" width="100%"></table>
+<br/>
 <div id="temperature"></div>
 <div id="intensity"></div>
 <div id="dew_point"></div>
