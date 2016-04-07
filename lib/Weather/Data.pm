@@ -4,6 +4,7 @@ package Weather::Data;
 use Moose;
 
 use Data::Dumper;
+use JSON::PP;
 
 has 'schema' => (isa => 'Weather::Schema',
 		 is => 'rw',
@@ -25,10 +26,11 @@ has 'end_date' => (isa => 'Str',
 		   required => 1,
     );
 
-has 'type' => (isa => 'Str',
+has 'types' => (#isa => 'Array',
 	       is => 'rw',
-	       default => 'Temperature',
-    );
+	       default => '["temperature", "intensity", "dew_point", "relative_humidity", "precipitation"]',
+				 required => 1,
+		);
 
 has 'interval' => (isa => 'Str',
 		   is => 'rw',
@@ -40,43 +42,72 @@ has 'interval' => (isa => 'Str',
 sub get_data {
     my $self = shift;
 
-    print STDERR "Processing weather data: ". join ", ", ($self->start_date(), $self->end_date(), $self->location(), $self->type())."\n";
+    print STDERR "Processing weather data: ". join ", ", ($self->start_date(), $self->end_date(), $self->location(), $self->types())."\n";
 
     my $location_row = $self->schema()->resultset("Location")->find({ name => $self->location() });
     if (!$location_row) {
-	return { error => "Unknown location (".$self->location().")" };
+			return { error => "Unknown location (".$self->location().")" };
     }
 
-    my $type_row = $self->schema()->resultset("Cvterm")->find( { name => $self->type() });
-    if (! $type_row) {
-	return { error => "The type \'".$self->type()."\' is not recognized\n" };
-    }
-    my $type_id = $type_row->cvterm_id();
-
-    print STDERR "TYPE_ID = $type_id\n";
     my $station_id_rs = $self->schema()->resultset("Station")->search( { 'location.name' => $location_row->name() }, { join => 'location' });
-
     my @station_ids = map { $_->station_id() } $station_id_rs->all();
 
     print STDERR Dumper(\@station_ids);
 
     my $station_ids_str = join ", ", @station_ids;
+		print STDERR "Station id string: $station_ids_str";
 
-    my $q = "select time, value from measurement where time > ? and time <= ? and type_id=? and station_id in (?)";
+		my $interval = $self->interval();
+		print STDERR "Interval = $interval \n";
+		my $type_ref = $self->types();
+		my @types = @$type_ref;
+		print STDERR "Types = @types \n";
+		my $data = {};
 
-    print STDERR "Query: $q\n";
+		my $time_selects = {
+			minutes => "time,",
+			hour => "date_trunc('hour', time) AS time,",
+			day => "date_trunc('day', time) AS time,"
+		};
 
-    my $h = $self->schema()->storage()->dbh()->prepare($q);
-    $h->execute($self->start_date, $self->end_date, $type_id, $station_ids_str);
-    my @measurements;
+		my $value_selects = {
+			temperature => " avg(value) as value",
+			intensity => " avg(value) as value",
+			dew_point => " avg(value) as value",
+			relative_humidity => " avg(value) as value",
+			precipitation => " sum(value) as value"
+		};
 
-    while (my ($time, $value) = $h->fetchrow_array()) {
-			push @measurements, { date => $time, value => $value };
-    }
+		for my $type (@types) {
+			my $type_row = $self->schema()->resultset("Cvterm")->find( { name => $type });
+			if (! $type_row) {
+				return { error => "The type $type is not recognized\n" };
+			}
+			my $type_id = $type_row->cvterm_id();
+			print STDERR "TYPE_ID = $type_id\n";
 
-    print STDERR "Measurements: ".Dumper(\@measurements);
-    return {
-			data => \@measurements,
+			my $q = "SELECT " . $time_selects->{$interval} . $value_selects->{$type} . " FROM measurement WHERE time > ? AND time <= ? AND type_id=? AND station_id IN (?) GROUP BY 1 ORDER BY 1";
+			print STDERR "Query for $type: $q\n";
+
+			my $h = $self->schema()->storage()->dbh()->prepare($q);
+    	$h->execute($self->start_date, $self->end_date, $type_id, $station_ids_str);
+
+			my @measurements;
+			while (my ($time, $value) = $h->fetchrow_array()) {
+				push @measurements, { date => $time, value => $value };
+    	}
+			print STDERR "Measurements for $type: ".Dumper(\@measurements);
+
+			$data -> {$type} = \@measurements;
+		}
+
+		print STDERR Dumper($data);
+		#my $json_data = encode_json $data;
+		#print STDERR "now encoded: " . Dumper($json_data);
+
+		return {
+			data => $data
+			#data => $json_data
     };
 
 }

@@ -48,12 +48,9 @@ $(document).ready(function () {
 <button id="submit">Submit</button>
 </div>
 <div id="time3"></div>
-<div id="Temperature"></div>
-<div id="Intensity"></div>
-<div id="DewPoint"></div>
-<div id="RelativeHumidity"></div>
-<div id="Precipitation"></div>
-<div id = "chart_area">
-[chart goes here...]
-<svg class="chart"></svg>
+<div id="temperature"></div>
+<div id="intensity"></div>
+<div id="dew_point"></div>
+<div id="relative_humidity"></div>
+<div id="precipitation"></div>
 </div>

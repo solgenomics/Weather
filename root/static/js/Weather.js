@@ -1,12 +1,12 @@
 
 function initialize_events() {
 
-    //alert('Initializing date_pickers...');
+  //alert('Initializing date_pickers...');
 
-    $(function() {
-	$("#start_datepicker").datepicker( {
-	    'dateFormat' : "yy-mm-dd",
-	    changeMonth: true,
+  $(function() {
+    $("#start_datepicker").datepicker( {
+      'dateFormat' : "yy-mm-dd",
+      changeMonth: true,
 	    numberOfMonths: 2,
 //	    'onClose': function( selectedDate ) {
 //		$( "#end_datepicker" ).datepicker( "option", "minDate", selectedDate );
@@ -27,52 +27,78 @@ function initialize_events() {
     });
 
     $('#submit').click( function() {
-	var location = $('#location_select').val();
-	var start_date = $('#start_datepicker').val();
-	var end_date = $('#end_datepicker').val();
-	var interval = $('input:radio[name=interval]:checked').val();
-	var type = $('input:radio[name=type]:checked').val();
-	//alert(start_date+ ' '+end_date + ' '+ location + ' '+ type);
+	     var location = $('#location_select').val();
+       var start_date = $('#start_datepicker').val();
+       var end_date = $('#end_datepicker').val();
+       var interval = $('input:radio[name=interval]:checked').val();
+       //var type = $('input:radio[name=type]:checked').val();
 
-	var types = [['Temperature', ' in °C', 'Description goes here', '#8C001A'], ['Intensity', ' in lum/ftÂ²', 'Description goes here', '#ffd300'], ['Dew Point', ' in °C', 'Description goes here', '#5cb85c'], ['Relative Humidity', ' expressed as a %', 'Description goes here', '#5bc0de'], ['Precipitation', ' in mm', 'Description goes here', '#428bca']];
+       //alert(start_date+ ' '+end_date + ' '+ location + ' '+ type);
 
-	jQuery('#chart_area').html("");
-	for(var n = 0; n<types.length; n++) {
-	    //alert("Getting data for "+types[n]);
-	     data = get_data(location, start_date, end_date, interval, types[n]);
-	}
+       var type_data = {
+         temperature: ['Temperature', 'Temperature measurements in °C, as gathered by HOBO weather station', '#8C001A'],
+         intensity: ['Intensity', 'Intensity measurements in lum/ftÂ², as gathered by HOBO weather station', '#ffd300'],
+         dew_point: ['Dew Point', 'Dew Point measurements in °C, as gathered by HOBO weather station', '#5cb85c'],
+         relative_humidity: ['Relative Humidity', 'Percent Relative Humidity measurements, as gathered by HOBO weather station', '#5bc0de'],
+         precipitation: ['Precipitation', 'Precipitation totals in mm, as gathered by HOBO weather station', '#428bca']
+       };
+
+       jQuery('#chart_area').html("");
+       var types =[];
+       for (var key in type_data) {
+         types.push(key);
+       }
+       //for(var n = 0; n<type_data.length; n++) {
+         //alert("Getting data for "+types[n]);
+         //types.push(type_data[n][1]);
+         //data = get_data(location, start_date, end_date, interval, types[n]);
+       //}
+
+       var data = get_data(location, start_date, end_date, interval, type_data, types);
     });
 }
 
-function get_data(location, start_date, end_date, interval, type) {
-
-    jQuery.ajax( {
-	url: '/rest/weather',
-	data: { 'location' : location, 'start_date' : start_date, 'end_date' : end_date, 'interval' : interval, 'type' : type[0] },
-	success: function(response) {
+function get_data(location, start_date, end_date, interval, type_data, types) {
+  console.log(type_data);
+  jQuery.ajax( {
+    url: '/rest/weather',
+    data: { 'location' : location, 'start_date' : start_date, 'end_date' : end_date, 'interval' : interval, 'types' : types },
+    success: function(response) {
 	    if (response.error) {
-		alert(response.error);
+        alert(response.error);
 	    }
 	    else {
-    var targetdiv_id = '#'+type[0].replace(" ", "");
-    var title = type[0] + type[1];
-    var json_data = MG.convert.date(response.data, 'date', "%Y-%m-%d %H:%M:%S");
-    MG.data_graphic({
-        title: title,
-        description: type[2],
-        color: type[3],
-        data: json_data,
-        linked: true,
-        full_width: true,
-        height: 300,
-        right: 40,
-        xax_count: 4,
-        target: targetdiv_id
-    });
+        console.log("response data = "+response.data);
+        //display_summary_statistics(data);
+        display_timeseries(response.data, type_data);
 	    }
-	},
-	error: function(response) {
+    },
+    error: function(response) {
 	    alert('error');
-	}
+    }
+  });
+}
+
+function display_timeseries(data, type_data) {
+  //for ( var i = 0; i < data.length; i++) {
+    //  var measurements = data[i];
+  for (var type in data) {
+    if (data.hasOwnProperty(type)) {
+    console.log("current type ="+type);
+    var type_string = type_data[type];
+    var converted_data = MG.convert.date(data[type], 'date', "%Y-%m-%d %H:%M:%S");
+    MG.data_graphic({
+      title: type_string[0],
+      description: type_string[1],
+      color: type_string[2],
+      data: converted_data,
+      linked: true,
+      full_width: true,
+      height: 300,
+      right: 40,
+      xax_count: 4,
+      target: '#' + type
     });
+  }
+  }
 }
