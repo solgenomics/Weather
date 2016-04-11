@@ -1,37 +1,58 @@
-
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <title>Weather Database</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Weather Database</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script type="text/javascript" src="//cdn.jsdelivr.net/jquery/1/jquery.min.js"></script>
-  <script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-  <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap/latest/css/bootstrap.css" />
+    <meta name="layout" content="main"/>
 
-  <script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
-  <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
+    <script type="text/javascript" src="/static/js/jquery-1.12.3.min.js"></script>
+    <script type="text/javascript" src="/static/js/bootstrap/2-1-3.bootstrap.min.js"></script>
+    <script type="text/javascript" src="/static/js/moment.min.js"></script>
+    <script type="text/javascript" src="/static/js/daterangepicker.js"></script>
+    <script src='/static/js/datatables/jquery.dataTables.min.js' charset='utf-8'></script>
+    <script src='/static/js/datatables/dataTables.bootstrap.min.js' charset='utf-8'></script>
+    <script type="text/javascript" src='/static/js/d3.min.js' charset='utf-8'></script>
+    <script type="text/javascript" src="/static/js/metricsgraphics.js"></script>
+    <script src="/static/js/Weather.js"></script>
 
-  <!-- <script src="//code.jquery.com/jquery-1.10.2.js"></script>
-  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
--->
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.0/d3.min.js' charset='utf-8'></script>
-  <script src='https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js' charset='utf-8'></script>
-  <script src='https://cdn.datatables.net/1.10.11/js/dataTables.bootstrap.min.js' charset='utf-8'></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/metrics-graphics/2.8.0/metricsgraphics.min.js"></script>
-  <script src="/static/js/Weather.js"></script>
-  <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
-  <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/metrics-graphics/2.8.0/metricsgraphics.min.css">
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.10.11/css/dataTables.bootstrap.min.css">
-  <link rel="stylesheet" href="/static/weather.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap/2-1-3.bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/static/css/daterangepicker.css" />
+    <link rel="stylesheet" href="/static/css/datatables/dataTables.jqueryui.css">
+    <link rel="stylesheet" href="/static/css/metricsgraphics.css">
+    <link rel="stylesheet" href="/static/css/datatables/dataTables.bootstrap.min.css">
+    <link rel="stylesheet" href="/static/weather.css" type="text/css" />
+    <link href="/static/Font-Awesome/css/font-awesome.css" rel="stylesheet">
+    <link href="/static/css/customize-template.css" type="text/css" media="screen, projection" rel="stylesheet" />
 
 </head>
 <body>
-  <center>
-    <table width="800px" ><tr><td>
+<div id="body-container">
 
-	  <table><tr><td><a href="/" alt="Home"><img src="/static/img/weather_db_logo_small.png" width="40"/></a></td><td>&nbsp;</td><td>
-		<font style="font-family:arial,helvetica,sans-serif;font-weight:bold;font-size:24pt;color:lightblue;">Weather Database</font><br />
-	      </td><td width="400" align="right"><a href="/weather/">Query</a> | <a href="/help">Help</a> | <a href="/about">About</a> </td></tr></table>
-
-      </td></tr>
-      <tr><td>
+<section class="nav nav-page">
+      <div class="container">
+          <div class="row">
+              <div class="span8">
+                  <header class="page-header">
+                    <h3>
+                      <a href="/" alt="Home"><img src="/static/img/weather_db_logo_small.png" width="60"/></a>
+                      <font style="font-family:arial,helvetica,sans-serif;font-weight:bold;font-size:24pt;color:lightblue;">Weather Database</font>
+                    </h3>
+                  </header>
+              </div>
+              <div class="page-nav-options">
+                  <div class="span8">
+                      <ul class="nav nav-tabs">
+                          <li class="active">
+                              <a href="#"><i class="icon-home"></i>Home</a>
+                          </li>
+                          <li><a href="#">Upload</a></li>
+                          <li><a href="#">About</a></li>
+                      </ul>
+                  </div>
+              </div>
+          </div>
+      </div>
+</section>

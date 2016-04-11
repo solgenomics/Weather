@@ -78,6 +78,14 @@ sub get_data {
 			precipitation => " sum(value) as value"
 		};
 
+		my $sigfig_selects = {
+			temperature => "'FM999999999.000'",
+			intensity => "'FM999999999'",
+			dew_point => "'FM999999999.000'",
+			relative_humidity => "'FM999999999.000'",
+			precipitation => "'FM999999999.0'"
+		};
+
 		for my $type (@types) {
 			my $type_row = $self->schema()->resultset("Cvterm")->find( { name => $type });
 			if (! $type_row) {
@@ -98,7 +106,7 @@ sub get_data {
     	}
 			print STDERR "Measurements for $type: ".Dumper(\@measurements);
 
-			my $summary_q = "SELECT min(value), max(value), avg(value), stddev(value), sum(value) FROM (" . $q . ") base_query";
+			my $summary_q = "SELECT to_char(min(value), $sigfig_selects->{$type}), to_char(max(value), $sigfig_selects->{$type}), to_char(avg(value), $sigfig_selects->{$type}), to_char(stddev(value), $sigfig_selects->{$type}), to_char(sum(value), $sigfig_selects->{$type}) FROM (" . $q . ") base_query";
 
 			print STDERR "Summary query= $summary_q";
 
