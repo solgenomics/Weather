@@ -1,62 +1,30 @@
-
 function initialize_events() {
 
-  //alert('Initializing date_pickers...');
-
-/*  $(function() {
-    $("#start_datepicker").datepicker( {
-      'dateFormat' : "yy-mm-dd",
-      changeMonth: true,
-	    numberOfMonths: 2,
-//	    'onClose': function( selectedDate ) {
-//		$( "#end_datepicker" ).datepicker( "option", "minDate", selectedDate );
-//	    }
-	});
-    });
-
-    $(function() {
-	$("#end_datepicker").datepicker( {
-	    'dateFormat' : "yy-mm-dd",
-	    changeMonth: true,
-	    numberOfMonths: 2,
-//	    'onClose': function( selectedDate ) {
-//		alert('Setting start_datapicker minDate');
-//		$( "#start_datepicker" ).datepicker( "option", "minDate", selectedDate );
-//	    }
-	});
-    });
-*/
-
-  var start_date;
-  var end_date;
-
-    $('input[name="daterange"]').daterangepicker(
+    jQuery('input[name="daterange"]').daterangepicker(
       {
-          startDate: moment().subtract('days', 29),
-          endDate: moment(),
+        "autoApply": true,
+        "startDate": "10/01/2015",
+        "endDate": "10/31/2015",
+        "minDate": "09/01/2015",
+        //"maxDate": "12/31/2015",
+        "opens": "center"
       },
       function(start, end) {
-        start_date = start.format('YYYY-MM-DD');
-        console.log("start="+start);
-        end_date = end.format('YYYY-MM-DD');
-        console.log("end="+end);
+        startDate = start.format('YYYY-MM-DD');
+        endDate = end.format('YYYY-MM-DD');
       }
     );
 
-    $('#submit').click( function() {
-	     var location = $('#location_select').val();
-       //var start_date = $('#daterange').val(picker.startDate.format('YYYY-MM-DD'));
-       //var end_date = $('#daterange').val(picker.endDate.format('YYYY-MM-DD')); //$('#start_datepicker').val();
+    jQuery('#submit').click( function() {
+	     var location = jQuery('#location_select').val();
+       var start_date = jQuery('#daterange').data('daterangepicker').startDate.format('YYYY-MM-DD');
+       var end_date = jQuery('#daterange').data('daterangepicker').endDate.format('YYYY-MM-DD');
        console.log(start_date+" till "+end_date);
-       //var end_date = $('#end_datepicker').val();
-       var types = $('#types').val() || [];
-       var interval = $('#interval').val();
+       var types = jQuery('#types').val() || [];
+       var interval = jQuery('#interval').val();
        console.log("types = "+types);
-       //var type = $('input:radio[name=type]:checked').val();
-
-       //alert(start_date+ ' '+end_date + ' '+ location + ' '+ type);
-
        var type_data = {
+
          temperature: ['Temperature', 'Temperature measurements in °C, as gathered by HOBO weather station', '#8C001A'],
          intensity: ['Intensity', 'Intensity measurements in lum/ftÂ², as gathered by HOBO weather station', '#ffd300'],
          dew_point: ['Dew Point', 'Dew Point measurements in °C, as gathered by HOBO weather station', '#5cb85c'],
@@ -95,9 +63,14 @@ function get_data(location, start_date, end_date, interval, type_data, types) {
     }
   });
 }
-
+function select_all_options(obj) {
+    if (!obj || obj.options.length ==0) { return; }
+    for (var i=0; i<obj.options.length; i++) {
+      obj.options[i].selected = true;
+    }
+}
 function display_summary_statistics(data) {
-  $('#summary_stats').DataTable( {
+  jQuery('#summary_stats').DataTable( {
     data: data,
     destroy: true,
     columns: [

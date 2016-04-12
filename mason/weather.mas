@@ -2,89 +2,111 @@
 <%args>
 </%args>
 
+<body>
+<div id="wrapper" class="container-fluid">
+  <div id="main_row" class="row">
+    <div class="col-sm-1 col-md-1 col-lg-2">
+    </div>
+    <div class="col-sm-10 col-md-10 col-lg-8">
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="panel panel-info">
+      <div class="panel-heading">Options</div>
+      <div class="panel-body" style="overflow:hidden">
+        <div id="input_form">
+          <table><tr>
+              <td class="col-sm-4 col-md-4 col-lg-4">
+              <p>Select a location:</p>
+                <select class="form-control input-sm" id="location_select">
+                  <option>Namulonge
+                  </option>
+                </select>
+              <br>
+              <p>Select an interval:</p>
+                <select class="form-control input-sm" id="interval" >
+                  <option value="">
+                  </option><option value="minutes">Individual measurements
+                  </option><option value="hours">Hourly averages
+                  </option><option value="days">Daily averages
+                  </option>
+                </select>
+              </td>
+              <td class="col-sm-4 col-md-4 col-lg-4">
+              <p>Select a date range:</p>
+                <input class="form-control input-sm" type="text" id="daterange" name="daterange"/>
+              </td>
+              <td class="col-sm-4 col-md-4 col-lg-4">
+              <p>Select measurement types:</p>
+                <select multiple="" class="form-control" id="types" name="1" size="5" style="min-width: 200px;overflow:auto;">
+                  <option value="temperature" title="Temperature">Temperature
+                  </option><option value="intensity" title="Intensity">Intensity
+                  </option><option value="dew_point" title="Dew Point">Dew Point
+                  </option><option value="relative_humidity" title="Relative Humidity">Relative Humidity
+                  </option><option value="precipitation" title="Precipitation">Precipitation
+                  </option>
+                </select>
+                <br>
+                <button class="btn btn-default btn-sm" id="select_all" >Select All</button>
+              </td>
+          </tr></table>
+        </div>
+      </div>
+    <div class="panel-footer">
+    <button type="submit" id="submit" class="btn btn-primary">Submit</button>
+    </div>
+  </div>
+</div>
+<br/>
+
+<div class="row">
+  <div class="panel panel-info">
+    <div class="panel-heading">Table</div>
+    <div class="panel-body" style="overflow:hidden">
+      <div class="table-responsive">
+      <table id="summary_stats" class="table table-hover table-striped table-bordered" width="100%"></table>
+      </div>
+    </div>
+  </div>
+</div>
+<br/>
+
+<div class="row">
+  <div class="panel panel-info">
+    <div class="panel-heading">Graphs</div>
+    <div class="panel-body" style="overflow:hidden">
+      <div id="temperature"></div>
+      <div id="intensity"></div>
+      <div id="dew_point"></div>
+      <div id="relative_humidity"></div>
+      <div id="precipitation"></div>
+    </div>
+  </div>
+</div>
+<br/>
+
+</div>
+</div>
+</div>
+</div>
+</body>
 
 <script>
-$(document).ready(function () {
+jQuery(document).ready(function() {
 
-  initialize_events();
-
+jQuery('#select_all').click( function() {
+    console.log("select all clicked");
+    select_all_options(document.getElementById('types'));
 });
+
+initialize_events();
+});
+
+function select_all_options(obj) {
+    if (!obj || obj.options.length ==0) { return; }
+    for (var i=0; i<obj.options.length; i++) {
+      obj.options[i].selected = true;
+    }
+}
+
 </script>
-</br>
-<section class="page container">
-<div class="span16">
-      <div class="box">
-          <div class="box-header">
-              <i class="icon-book"></i>
-              <h5>Forms</h5>
-          </div>
-          <div class="box-content">
-            <div id="input_form">
-            <table><tr><td class="span8">
-              <p>Location:</p><select id="location_select"><option>Namulonge</option></select></td><td class="span8">
-              <p>Date Range</p><input type="text" name="daterange" value="01/01/2015 - 01/31/2015" />
-              </td></tr><tr><td class="span8">
-              <p>Measurement Types:</p>
-                <select multiple="" class="form-control" id="types" name="1" size="10" style="min-width: 200px;overflow:auto;">
-                <option value="temperature" title="Temperature">Temperature
-                </option><option value="intensity" title="Intensity">Intensity
-                </option><option value="dew_point" title="Dew Point">Dew Point
-                </option><option value="relative_humidity" title="Relative Humidity">Relative Humidity
-                </option><option value="precipitation" title="Precipitation">Precipitation
-                </option></select>
-          </td><td class="span8"><p>Interval</p>
-          <select class="form-control input-sm" id="interval" >
-          <option value="">Select an interval
-          </option><option value="minutes">Individual measurements
-          </option><option value="hours">Hourly averages
-          </option><option value="days">Daily averages
-          </option></select>
-          </td></tr></table>
-        </div>
-        </div>
-<div class="box-footer">
-<button type="submit" id="submit" class="btn btn-primary">
-  <i class="icon-ok"></i>
-  Submit
-</button>
-</div>
-</div>
-</div>
-<br/>
-
-<div class="span16">
-                        <div class="box">
-                            <div class="box-header">
-                                <i class="icon-table"></i>
-                                <h5>
-                                    Table
-                                </h5>
-                            </div>
-                            <div class="box-content">
-<div class="table-responsive">
-<table id="summary_stats" class="table table-hover table-striped table-bordered span8"></table>
-</div>
-</div>
-</div>
-</div>
-<br/>
-
-<div class="span16">
-<div class="box">
-                            <div class="box-header">
-                                <i class="icon-bar-chart"></i>
-                                <h5>Charts</h5>
-                            </div>
-                            <div class="box-content">
-
-<div id="temperature"></div>
-<div id="intensity"></div>
-<div id="dew_point"></div>
-<div id="relative_humidity"></div>
-<div id="precipitation"></div>
-</div>
-</div>
-</div>
-</section>
-</div>
-</div>
