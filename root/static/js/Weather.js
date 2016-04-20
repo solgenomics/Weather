@@ -19,10 +19,10 @@ function initialize_events() {
 	     var location = jQuery('#location_select').val();
        var start_date = jQuery('#daterange').data('daterangepicker').startDate.format('YYYY-MM-DD');
        var end_date = jQuery('#daterange').data('daterangepicker').endDate.format('YYYY-MM-DD');
-       console.log(start_date+" till "+end_date);
+       //console.log(start_date+" till "+end_date);
        var types = jQuery('#types').val() || [];
        var interval = jQuery('#interval').val();
-       console.log("types = "+types);
+       //console.log("types = "+types);
        var type_data = {
 
          temperature: ['Temperature', 'Temperature measurements in °C, as gathered by HOBO weather station', '#8C001A'],
@@ -43,7 +43,7 @@ function initialize_events() {
 }
 
 function get_data(location, start_date, end_date, interval, type_data, types) {
-  console.log(type_data);
+  //console.log(type_data);
   jQuery.ajax( {
     url: '/rest/weather',
     data: { 'location' : location, 'start_date' : start_date, 'end_date' : end_date, 'interval' : interval, 'types' : types },
@@ -52,8 +52,8 @@ function get_data(location, start_date, end_date, interval, type_data, types) {
         alert(response.error);
 	    }
 	    else {
-        console.log("response values = "+JSON.stringify(response.values));
-        console.log("response stats = "+JSON.stringify(response.stats));
+        //console.log("response values = "+JSON.stringify(response.values));
+        //console.log("response stats = "+JSON.stringify(response.stats));
         display_summary_statistics(response.stats);
         display_timeseries(response.values, type_data);
 	    }
@@ -70,7 +70,9 @@ function select_all_options(obj) {
     }
 }
 function display_summary_statistics(data) {
-  jQuery('#summary_stats').DataTable( {
+  var table = jQuery('#summary_stats').DataTable( {
+    dom: 'Bfrtip',
+    buttons: ['copy', 'excel', 'csv' ],
     data: data,
     destroy: true,
     columns: [
@@ -82,13 +84,16 @@ function display_summary_statistics(data) {
       { title: "Total Sum" }
     ]
   } );
+
+  //table.buttons().container().appendTo( jQuery('#example_wrapper .col-sm-6:eq(0)' ) );
+
 }
 function display_timeseries(data, type_data) {
   //for ( var i = 0; i < data.length; i++) {
     //  var measurements = data[i];
   for (var type in data) {
     if (data.hasOwnProperty(type)) {
-    console.log("current type ="+type);
+    //console.log("current type ="+type);
     var type_string = type_data[type];
     var converted_data = MG.convert.date(data[type], 'date', "%Y-%m-%d %H:%M:%S");
     MG.data_graphic({

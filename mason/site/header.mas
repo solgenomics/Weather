@@ -17,6 +17,15 @@
     <script type="text/javascript" src='/static/js/d3.min.js' charset='utf-8'></script>
     <script type="text/javascript" src="/static/js/metricsgraphics.js"></script>
     <script src="/static/js/Weather.js"></script>
+    <script src='/static/js/datatables/dataTables.foundation.min.js' charset='utf-8'></script>
+    <script src="//cdn.datatables.net/buttons/1.1.2/js/dataTables.buttons.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
+    <script src="//cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/pdfmake.min.js"></script>
+    <script src="//cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/vfs_fonts.js"></script>
+    <script src="//cdn.datatables.net/buttons/1.1.2/js/buttons.bootstrap.min.js"></script>
+    <script src="//cdn.datatables.net/buttons/1.1.2/js/buttons.html5.min.js"></script>
+    <script src="//cdn.datatables.net/buttons/1.1.2/js/buttons.print.min.js"></script>
+    <script src="//cdn.datatables.net/buttons/1.1.2/js/buttons.colVis.min.js"></script>
 
     <link rel="stylesheet" type="text/css" href="/static/css/bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="/static/css/datatables/dataTables.jqueryui.css">
@@ -25,6 +34,7 @@
     <link rel="stylesheet" href="/static/weather.css" type="text/css" />
     <link href="/static/Font-Awesome/css/font-awesome.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="/static/css/daterangepicker.css" />
+    <link href="//cdn.datatables.net/buttons/1.1.2/css/buttons.bootstrap.min.css" rel="stylesheet">
 
 
 <div class="container">
@@ -36,7 +46,7 @@
                 <font style="font-family:arial,helvetica,sans-serif;font-weight:bold;font-size:24pt;color:lightblue;">Weather Database</font>
               </h3></center>
             </header>
-        </div>        
+        </div>
     </div>
 </div>
 </head>
