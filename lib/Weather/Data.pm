@@ -36,7 +36,10 @@ has 'interval' => (isa => 'Str',
 		   default => 'day',
     );
 
-
+has 'restrict' => (isa => 'Str',
+				is => 'rw',
+				default => 'both',
+		);
 
 sub get_data {
     my $self = shift;
@@ -57,14 +60,55 @@ sub get_data {
 		print STDERR "Station id string: $station_ids_str";
 
 		my $interval = $self->interval();
+		my $restrict = $self->restrict();
 		print STDERR "Interval = $interval \n";
+		print STDERR "Restrict = $restrict \n";
 		my $type_ref = $self->types();
 		my @types = @$type_ref;
 		print STDERR "Types = @types \n";
-		my $values = {};
-		my @stats;
+		my (@day_stats, @stats, $values, $day_filter);
 
-		my $time_selects = {
+		if ($restrict eq 'day' || $restrict eq 'night') {
+			my $day_stats_query =
+				"SELECT date_trunc('day', time) AS day, min(time) AS sunrise, max(time) AS sunset, (max(time) - min(time)) AS daylength
+				FROM measurement
+				WHERE time > ? AND time <= ? AND type_id=? AND station_id IN (?) AND value > 0
+				GROUP BY 1 ORDER BY 1";
+
+			my $intensity_row = $self->schema()->resultset("Cvterm")->find( { name => 'intensity' });
+			if (! $intensity_row) {
+				return { error => "The type intensity was not recognized\n" };
+			}
+			my $intensity_id = $intensity_row->cvterm_id();
+			print STDERR "INTENSITY_ID = $intensity_id\n";
+
+			my $h = $self->schema()->storage()->dbh()->prepare($day_stats_query);
+			$h->execute($self->start_date, $self->end_date, $intensity_id, $station_ids_str);
+
+			my (@day_ranges, $start);
+			my $counter = 0;
+			while (my ($day, $sunrise, $sunset, $daylength) = $h->fetchrow_array()) {
+				push @day_stats, [$day, $sunrise, $sunset, $daylength];
+				if ($restrict eq 'day') {
+					push @day_ranges, "(time >= '".$sunrise."' AND time <= '".$sunset."')";
+				}
+				elsif ($restrict eq 'night') {
+					unless ($counter < 1) {
+						push @day_ranges, " (time > '".$start."' AND time < '".$sunrise."') ";
+					}
+					$start = $sunset;
+					$counter++;
+				}
+			}
+			$day_filter = "(". join('OR', @day_ranges) . ")";
+			print STDERR "day filter = $day_filter \n";
+		}
+		else {
+			 $day_filter = " time > '".$self->start_date."' AND time <= '".$self->end_date."' ";
+		}
+
+
+		my $interval_selects = {
 			minutes => "time,",
 			hours => "date_trunc('hour', time) AS time,",
 			days => "date_trunc('day', time) AS time,"
@@ -94,11 +138,13 @@ sub get_data {
 			my $type_id = $type_row->cvterm_id();
 			print STDERR "TYPE_ID = $type_id\n";
 
-			my $q = "SELECT " . $time_selects->{$interval} . $value_selects->{$type} . " FROM measurement WHERE time > ? AND time <= ? AND type_id=? AND station_id IN (?) GROUP BY 1 ORDER BY 1";
+			#my $q = "SELECT " . $interval_selects->{$interval} . $value_selects->{$type} . " FROM measurement WHERE time > ? AND time <= ? AND type_id=? AND station_id IN (?) GROUP BY 1 ORDER BY 1";
+			my $q = "SELECT " . $interval_selects->{$interval} . $value_selects->{$type} . " FROM measurement WHERE $day_filter AND type_id=? AND station_id IN (?) GROUP BY 1 ORDER BY 1";
 			print STDERR "Query for $type: $q\n";
 
 			my $h = $self->schema()->storage()->dbh()->prepare($q);
-    	$h->execute($self->start_date, $self->end_date, $type_id, $station_ids_str);
+    	#$h->execute($self->start_date, $self->end_date, $type_id, $station_ids_str);
+			$h->execute($type_id, $station_ids_str);
 
 			my @measurements;
 			while (my ($time, $value) = $h->fetchrow_array()) {
@@ -111,7 +157,8 @@ sub get_data {
 			print STDERR "Summary query= $summary_q";
 
 			$h = $self->schema()->storage()->dbh()->prepare($summary_q);
-    	$h->execute($self->start_date, $self->end_date, $type_id, $station_ids_str);
+    	#$h->execute($self->start_date, $self->end_date, $type_id, $station_ids_str);
+			$h->execute($type_id, $station_ids_str);
 			my ($min, $max, $average, $std_dev, $total) = $h->fetchrow_array();
 			print STDERR "average for $type = $average \n";
 
@@ -120,6 +167,7 @@ sub get_data {
 		}
 
 		return {
+			day_stats => \@day_stats,
 			stats => \@stats,
 			values => $values
     };

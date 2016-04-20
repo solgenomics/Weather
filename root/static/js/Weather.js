@@ -22,7 +22,8 @@ function initialize_events() {
        //console.log(start_date+" till "+end_date);
        var types = jQuery('#types').val() || [];
        var interval = jQuery('#interval').val();
-       //console.log("types = "+types);
+       var restrict = jQuery('#restrict').val();
+       console.log("restrict value= "+restrict);
        var type_data = {
 
          temperature: ['Temperature', 'Temperature measurements in °C, as gathered by HOBO weather station', '#8C001A'],
@@ -37,16 +38,16 @@ function initialize_events() {
        jQuery('#dew_point').html("");
        jQuery('#relative_humidity').html("");
        jQuery('#precipitation').html("");
-       var data = get_data(location, start_date, end_date, interval, type_data, types);
+       var data = get_data(location, start_date, end_date, interval, restrict, type_data, types);
 
     });
 }
 
-function get_data(location, start_date, end_date, interval, type_data, types) {
+function get_data(location, start_date, end_date, interval, restrict, type_data, types) {
   //console.log(type_data);
   jQuery.ajax( {
     url: '/rest/weather',
-    data: { 'location' : location, 'start_date' : start_date, 'end_date' : end_date, 'interval' : interval, 'types' : types },
+    data: { 'location' : location, 'start_date' : start_date, 'end_date' : end_date, 'interval' : interval, 'restrict': restrict, 'types' : types },
     success: function(response) {
 	    if (response.error) {
         alert(response.error);
@@ -55,6 +56,10 @@ function get_data(location, start_date, end_date, interval, type_data, types) {
         //console.log("response values = "+JSON.stringify(response.values));
         //console.log("response stats = "+JSON.stringify(response.stats));
         display_summary_statistics(response.stats);
+      //  if (response.daylength_stats) {
+      //    display_daylength_stats(response.daylength_stats);
+      //  }
+      //  display_raw_data(response.values, type_data);
         display_timeseries(response.values, type_data);
 	    }
     },
@@ -85,6 +90,36 @@ function display_summary_statistics(data) {
     ]
   } );
 
+/*  function display_raw_data(data, types) {
+    var table = jQuery('#raw_data').DataTable( {
+      dom: 'Bfrtip',
+      buttons: ['copy', 'excel', 'csv' ],
+      data: data,
+      destroy: true,
+      columns: [
+            { "data": "name[, ]" },
+            { "data": "hr.0" },
+            { "data": "office" },
+            { "data": "extn" },
+            { "data": "hr.2" },
+            { "data": "hr.1" }
+        ]
+    } );
+
+ for creation of extra table of daylength stats
+
+  <div class="row">
+    <div class="panel panel-info">
+      <div class="panel-heading">Daylength Stats Table</div>
+      <div class="panel-body" style="overflow:hidden">
+        <div class="table-responsive">
+        <table id="summary_stats" class="table table-hover table-striped table-bordered" width="100%"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <br/>
+  */
   //table.buttons().container().appendTo( jQuery('#example_wrapper .col-sm-6:eq(0)' ) );
 
 }

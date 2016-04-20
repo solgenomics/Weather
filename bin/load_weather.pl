@@ -8,7 +8,7 @@ load_weather.pl - load the weather data from small weather stations
 perl load_weather.pl -H <hostname> -D <database_name> -U <database_user> -i <input_file.xls> -l <location>
 
 Options:
- 
+
 =over 5
 
 =item -H
@@ -38,10 +38,10 @@ station name (optional)
 =back
 
 
-=head1 
+=head1
 
 
-=cut 
+=cut
 
 use strict;
 
@@ -75,13 +75,13 @@ $schema->txn_begin();
 
 my $file_row = $schema->resultset("File")->find( { filename => $basename });
 
-if ($file_row) { 
+if ($file_row) {
     print STDERR "The file $basename has already been loaded. Please load another file.\n";
     exit();
 }
 
-my $file_row = $schema->resultset("File")->create( 
-    { 
+my $file_row = $schema->resultset("File")->create(
+    {
 	filename => $basename,
 	filepath => $filepath,
     });
@@ -92,41 +92,44 @@ my $location_id;
 
 my $location_row = $schema->resultset("Location")->find( { name => $opt_l });
 
-if (!$location_row) { 
+if (!$location_row) {
     print STDERR "Location $opt_l is not in the database. Insert? ";
     my $answer = (<STDIN>);
     chomp($answer);
-    if ($answer =~ /^y/i) { 
+    if ($answer =~ /^y/i) {
 	print STDERR "Inserting location $opt_l... ";
 	$location_row = $schema->resultset("Location")->create(
-	    { 
+	    {
 		name => $opt_l,
 	    });
 	print STDERR "Done.\n";
     }
-    else { 
+    else {
 	print STDERR " Exiting.\n"; exit();
     }
     $location_id = $location_row->location_id();
 }
+else {
+  $location_id = $location_row->location_id();
+}
 
-my $temp_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'Temperature' }) ->cvterm_id();
-my $rh_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'Relative Humidity'})->cvterm_id();
-my $dp_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'Dew Point' } )->cvterm_id();
-my $intensity_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'Intensity' })->cvterm_id();
+my $temp_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'temperature' }) ->cvterm_id();
+my $rh_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'relative_humidity'})->cvterm_id();
+my $dp_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'dew_point' } )->cvterm_id();
+my $intensity_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'intensity' })->cvterm_id();
 
-my $precipitation_cvterm_id = $schema->resultset("Cvterm")->find_or_create({ name=> 'Precipitation' })->cvterm_id();
+my $precipitation_cvterm_id = $schema->resultset("Cvterm")->find_or_create({ name=> 'precipitation' })->cvterm_id();
 
 my $parser = Spreadsheet::ParseExcel->new();
 my $book = $parser->parse($opt_i);
 
-if (!$book) { 
+if (!$book) {
     print STDERR "File $opt_i does not exist.\n";
     exit();
 }
 
 my @worksheets = $book->worksheets();
- 
+
 # parse first worksheet (Temp,RH,DP)
 #
 my $plot_title = $worksheets[0]->get_cell(0,0)->value();
@@ -140,8 +143,8 @@ my $col = 0;
 
 
 
-my $detector_row = $schema->resultset("Detector")->find_or_create( 
-    { 
+my $detector_row = $schema->resultset("Detector")->find_or_create(
+    {
 	identifier => $temp_sensor_sn,
     });
 
@@ -159,40 +162,40 @@ my $station_row = $schema->resultset("Station")->find_or_create(
 my $station_id = $station_row->station_id();
 
 my $old_precipitation_value =0;
-eval { 
+eval {
 
     print STDERR "Inserting worksheet 1...\n";
-    
+
     while (my $index_cell = $worksheets[0]->get_cell($row, $col)) {
 	my $index = $index_cell->value();
 	print STDERR "Cell value: $index\n";
-	
+
 	my $time_value;
 	my $time_cell = $worksheets[0]->get_cell($row, $col + 1);
-	if ($time_cell) { 
-	    $time_value = $time_cell->value();	
+	if ($time_cell) {
+	    $time_value = $time_cell->value();
 	}
-	else { 
+	else {
 	    print STDERR "This row ($row) does not have a time value. Skipping...\n";
 	    next();
 	}
 	my $temp_value;
 	my $temp_cell = $worksheets[0]->get_cell($row, $col + 2);
-	if ($temp_cell) { 
+	if ($temp_cell) {
 	    $temp_value = $temp_cell->value();
 	    insert_measurement($schema, $file_id, $temp_cvterm_id, $station_id, $time_value, $temp_value);
 	}
-	
+
 	my $rh_value;
 	my $rh_cell = $worksheets[0]->get_cell($row, $col + 3);
-	if ($rh_cell) { 
+	if ($rh_cell) {
 	    $rh_value = $rh_cell->value();
 	    insert_measurement($schema, $file_id, $rh_cvterm_id, $station_id, $time_value, $rh_value);
 	}
-	
+
 	my $dp_value;
 	my $dp_cell = $worksheets[0]->get_cell($row, $col + 4);
-	if ($dp_cell) { 
+	if ($dp_cell) {
 	    $dp_value = $dp_cell->value();
 	    insert_measurement($schema, $file_id, $dp_cvterm_id, $station_id,  $time_value, $dp_value);
 	}
@@ -201,76 +204,77 @@ eval {
 
     print STDERR "Inserting worksheet 2...\n";
     $row = 2; $col = 0;
-    while (my $index_cell = $worksheets[1]->get_cell($row, $col)) { 
+    while (my $index_cell = $worksheets[1]->get_cell($row, $col)) {
 	my $index = $index_cell->value();
-	
+
 	my $time_cell = $worksheets[1]->get_cell($row, $col+1);
 	my $time_value;
-	if ($time_cell) { 
+	if ($time_cell) {
 	    $time_value = $time_cell->value();
 	}
-	else { 
+	else {
 	    print STDERR "No time value for row $index. Skipping...\n";
 	    next();
 	}
-	
+
 	my $intensity_cell = $worksheets[1]->get_cell($row, $col+3);
 	my $intensity_value;
-	if ($intensity_cell) { 
+	if ($intensity_cell) {
 	    $intensity_value = $intensity_cell->value();
 	    insert_measurement($schema, $file_id, $intensity_cvterm_id, $station_id, $time_value, $intensity_value);
 	}
 	$row++;
     }
-    
+
     print STDERR "Inserting Sheet 3...\n";
     $row =2, $col = 0;
-    while (my $index_cell = $worksheets[2]->get_cell($row, $col)) { 
+    while (my $index_cell = $worksheets[2]->get_cell($row, $col)) {
 	my $index = $index_cell->value();
 	print STDERR "Parse line $index...\n";
 	my $time_cell = $worksheets[2]->get_cell($row, $col+1);
 	my $time_value;
-	if ($time_cell) { 
+	if ($time_cell) {
 	    $time_value = $time_cell->value();
 	}
 
-	else { 
+	else {
 	    print STDERR "No time value for row $index. Skipping...\n";
 	    next();
 	}
-	
+
 	my $precipitation_value;
 	my $precipitation_cell = $worksheets[2]->get_cell($row, $col+3);
-	if ($precipitation_cell) { 
+	if ($precipitation_cell) {
 	    $precipitation_value = $precipitation_cell->value();
-	    
+
 	    $precipitation_value = $precipitation_value - $old_precipitation_value;
+      print STDERR " insterting precip value $precipitation_value . . .\n";
 	    insert_measurement($schema, $file_id, $precipitation_cvterm_id, $station_id, $time_value, $precipitation_value);
-	    
+
 	    $old_precipitation_value = $precipitation_value;
-	 
+
 	}
-	else { 
+	else {
 	    print STDERR "No value for preciptation... adding 0.\n";
 	    insert_measurement($schema, $file_id, $precipitation_cvterm_id, $station_id, $time_value, 0);
 	}
 	$row++;
     }
-    
+
 };
 
-if ($@) { 
+if ($@) {
     print STDERR "An error occurred during data loading.\n";
     $schema->txn_rollback();
 }
-else { 
+else {
     print STDERR "Committing... ";
     $schema->txn_commit();
     print STDERR "Done.\n";
-} 
+}
 
 
-sub get_serial_number { 
+sub get_serial_number {
     my $string = shift;
     $string =~  s/\SEN S\/N\: (.+)\)/$1/;
     my $sn = $1;
@@ -278,7 +282,7 @@ sub get_serial_number {
 }
 
 
-sub insert_measurement { 
+sub insert_measurement {
     my $schema = shift;
     my $file_id = shift;
     my $cvterm_id = shift;
@@ -287,14 +291,14 @@ sub insert_measurement {
     my $value = shift;
 
     print STDERR "Inserting $value ($cvterm_id) at timepoint $time\n";
-    my $temp_rs = $schema->resultset("Measurement")->create( 
-	{ 
+    my $temp_rs = $schema->resultset("Measurement")->create(
+	{
             time => $time,
 	    type_id => $cvterm_id,
 	    value => $value,
 	    file_id => $file_id,
 	    station_id => $station_id,
 	});
-    
-    
+
+
 }

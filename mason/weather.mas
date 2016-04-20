@@ -21,6 +21,10 @@
                 <select class="form-control input-sm" id="location_select">
                   <option>Namulonge
                   </option>
+                  <option>Pallisa
+                  </option>
+                  <option>Serere
+                  </option>
                 </select>
               <br>
               <p>Select an interval:</p>
@@ -35,6 +39,15 @@
               <td class="col-sm-4 col-md-4 col-lg-4">
               <p>Select a date range:</p>
                 <input class="form-control input-sm" type="text" id="daterange" name="daterange"/>
+                <br>
+              <p>Restrict by time of day:</p>
+                <select class="form-control input-sm" id="restrict" >
+                  <option value="">
+                  </option><option value="day">Daytime measurements only
+                  </option><option value="night">Nighttime measurements only
+                  </option><option value="both">All measurements
+                  </option>
+                </select>
               </td>
               <td class="col-sm-4 col-md-4 col-lg-4">
               <p>Select measurement types:</p>
@@ -61,7 +74,7 @@
 
 <div class="row">
   <div class="panel panel-info">
-    <div class="panel-heading">Table</div>
+    <div class="panel-heading">Summary Table</div>
     <div class="panel-body" style="overflow:hidden">
       <div class="table-responsive">
       <table id="summary_stats" class="table table-hover table-striped table-bordered" width="100%"></table>
@@ -70,7 +83,19 @@
   </div>
 </div>
 <br/>
-
+<!--
+<div class="row">
+  <div class="panel panel-info">
+    <div class="panel-heading">Raw Data Table</div>
+    <div class="panel-body" style="overflow:hidden">
+      <div class="table-responsive">
+      <table id="raw_data" class="table table-hover table-striped table-bordered" width="100%"></table>
+      </div>
+    </div>
+  </div>
+</div>
+<br/>
+-->
 <div class="row">
   <div class="panel panel-info">
     <div class="panel-heading">Graphs</div>
