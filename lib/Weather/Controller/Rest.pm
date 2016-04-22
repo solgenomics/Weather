@@ -16,6 +16,7 @@ __PACKAGE__->config(
 
 
 use Weather::Data;
+use Weather::Options;
 
 sub weather_data : Path('/rest/weather') Args(0) {
     my $self = shift;
@@ -40,6 +41,32 @@ sub weather_data : Path('/rest/weather') Args(0) {
 	});
 
     $c->stash->{rest} = $wd->get_data();
+    return;
+}
+
+sub weather_locations : Path('/rest/locations') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $wo = Weather::Options->new({
+	    schema => $c->model("Schema")->schema()
+	  });
+
+    $c->stash->{rest} = $wo->get_locations();
+    return;
+}
+
+sub weather_types_and_range : Path('/rest/types_and_range') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $location = $c->req->param('location');
+
+    my $wo = Weather::Options->new({
+	    schema => $c->model("Schema")->schema(),
+	    location => $location
+    });
+
+    $c->stash->{rest} = $wo->get_types_and_dates();
     return;
 }
 

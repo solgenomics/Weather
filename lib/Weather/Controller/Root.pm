@@ -32,14 +32,14 @@ sub index :Path :Args(0) {
     my ( $self, $c ) = @_;
 
     # Hello World
-    $c->stash->{template} = 'index.mas';
+    $c->stash->{template} = 'weather.mas';
 }
 
-sub weather :Path('/weather') Args(0) { 
-    my $self = shift;
-    my $c = shift;
-    $c->stash->{template} = '/weather.mas';
-}
+#sub weather :Path('/weather') Args(0) {
+#    my $self = shift;
+#    my $c = shift;
+#    $c->stash->{template} = '/weather.mas';
+#}
 
 =head2 default
 

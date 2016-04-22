@@ -17,17 +17,9 @@
         <div id="input_form">
           <table><tr>
               <td class="col-sm-4 col-md-4 col-lg-4">
-              <p>Select a location:</p>
-                <select class="form-control input-sm" id="location_select">
-                  <option>Namulonge
-                  </option>
-                  <option>Pallisa
-                  </option>
-                  <option>Serere
-                  </option>
-                </select>
-              <br>
-              <p>Select an interval:</p>
+                <div id="location_select_div"></div>
+                <br>
+                <p>Select an interval:</p>
                 <select class="form-control input-sm" id="interval" >
                   <option value="">
                   </option><option value="minutes">Individual measurements
@@ -37,9 +29,8 @@
                 </select>
               </td>
               <td class="col-sm-4 col-md-4 col-lg-4">
-              <p>Select a date range:</p>
-                <input class="form-control input-sm" type="text" id="daterange" name="daterange"/>
-                <br>
+              <div id="daterange_div"></div>
+              <br>
               <p>Restrict by time of day:</p>
                 <select class="form-control input-sm" id="restrict" >
                   <option value="">
@@ -50,15 +41,7 @@
                 </select>
               </td>
               <td class="col-sm-4 col-md-4 col-lg-4">
-              <p>Select measurement types:</p>
-                <select multiple="" class="form-control" id="types" name="1" size="5" style="min-width: 200px;overflow:auto;">
-                  <option value="temperature" title="Temperature">Temperature
-                  </option><option value="intensity" title="Intensity">Intensity
-                  </option><option value="dew_point" title="Dew Point">Dew Point
-                  </option><option value="relative_humidity" title="Relative Humidity">Relative Humidity
-                  </option><option value="precipitation" title="Precipitation">Precipitation
-                  </option>
-                </select>
+                <div id="types_div"></div>
                 <br>
                 <button class="btn btn-default btn-sm" id="select_all" >Select All</button>
               </td>

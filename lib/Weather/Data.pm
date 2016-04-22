@@ -25,15 +25,14 @@ has 'end_date' => (isa => 'Str',
 		   required => 1,
     );
 
-has 'types' => (#isa => 'Array',
+has 'types' => (
 	       is => 'rw',
-	       default => '["temperature", "intensity", "dew_point", "relative_humidity", "precipitation"]',
 				 required => 1,
 		);
 
 has 'interval' => (isa => 'Str',
 		   is => 'rw',
-		   default => 'day',
+		   default => 'minutes',
     );
 
 has 'restrict' => (isa => 'Str',
