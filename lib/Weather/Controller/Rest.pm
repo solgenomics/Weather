@@ -56,7 +56,7 @@ sub weather_locations : Path('/rest/locations') Args(0) {
     return;
 }
 
-sub weather_types_and_range : Path('/rest/types_and_range') Args(0) {
+sub weather_types : Path('/rest/types') Args(0) {
     my $self = shift;
     my $c = shift;
     my $location = $c->req->param('location');
@@ -66,7 +66,24 @@ sub weather_types_and_range : Path('/rest/types_and_range') Args(0) {
 	    location => $location
     });
 
-    $c->stash->{rest} = $wo->get_types_and_dates();
+    $c->stash->{rest} = $wo->get_types();
+    return;
+}
+
+sub weather_daterange : Path('/rest/dates') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $location = $c->req->param('location');
+    my @types = $c->req->param('types[]');
+    print STDERR "rest types =" . @types . "\n";
+
+    my $wo = Weather::Options->new({
+	    schema => $c->model("Schema")->schema(),
+	    location => $location,
+      types => \@types
+    });
+
+    $c->stash->{rest} = $wo->get_dates();
     return;
 }
 

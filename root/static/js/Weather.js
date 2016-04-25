@@ -1,16 +1,16 @@
 function initialize_events() {
 
   create_location_select_box();
+  create_radio_button_options();
 
    jQuery('#submit').click( function() {
      var location = jQuery('#location_select').val();
      var start_date = jQuery('#daterange').data('daterangepicker').startDate.format('YYYY-MM-DD');
      var end_date = jQuery('#daterange').data('daterangepicker').endDate.format('YYYY-MM-DD');
-     //console.log(start_date+" till "+end_date);
      var types = jQuery('#types').val() || [];
-     var interval = jQuery('#interval').val();
-     var restrict = jQuery('#restrict').val();
-     console.log("restrict value= "+restrict);
+     var interval = jQuery('#interval label.active input').val()
+     var restrict = jQuery('#restrict label.active input').val()
+
      var type_data = {
        temperature: ['Temperature', 'Temperature measurements in °C, as gathered by HOBO weather station', '#8C001A'],
        intensity: ['Intensity', 'Intensity measurements in lum/ftÂ², as gathered by HOBO weather station', '#ffd300'],
@@ -52,6 +52,7 @@ function select_all_options(obj) {
     for (var i=0; i<obj.options.length; i++) {
       obj.options[i].selected = true;
     }
+    jQuery('#types').trigger('change');
 }
 
 function display_summary_statistics(data) {
@@ -138,7 +139,7 @@ function create_location_select_box() {
       jQuery('#location_select').change(
          function() {
            var location = jQuery(this).val();
-           create_type_and_datepicker(location);
+           create_type_multiple_select(location);
          }
        );
 	},
@@ -148,21 +149,47 @@ function create_location_select_box() {
     });
 }
 
-function create_type_and_datepicker(location) {
+function create_radio_button_options() {
+  var interval_html = '<p>Select measurement type:</p><div class = "btn-group" data-toggle = "buttons" id="interval"><label class = "btn btn-default active"><input type = "radio" name ="interval_options" id = "minutes" value="minutes">Raw values</label><label class = "btn btn-default"><input type = "radio" name = "options" id = "option2" value="hours"> Hourly averages</label><label class = "btn btn-default"><input type = "radio" name = "options" id = "option3" value="days"> Daily averages</label></div>'
+  jQuery('#interval_select_div').html(interval_html);
+  var time_html = '<p>Restrict by time of day:</p><div class = "btn-group" data-toggle = "buttons" id="restrict"><label class = "btn btn-default active"><input type = "radio" name ="time_options" id = "both" value="both"> All measurements</label><label class = "btn btn-default"><input type = "radio" name = "time_options" id = "night" value="night"> Night only</label><label class = "btn btn-default"><input type = "radio" name = "time_options" id = "day" value="day"> Day only</label></div>'
+  jQuery('#time_select_div').html(time_html);
+}
+
+function create_type_multiple_select(location) {
   jQuery.ajax( {
-	url: '/rest/types_and_range',
+	url: '/rest/types',
   data: {'location': location},
   success: function(response) {
-      console.log("type and date limits = "+JSON.stringify(response));
-      var type_html ='<p>Select measurement types:</p><select multiple="" class="form-control" id="types" name="1" size="5" style="min-width: 200px;overflow:auto;"><option>' + response.types.join('</option><option>') + '</option></select>';
-      jQuery('#types_div').html(type_html);
+      var type_html ='<p>Select data types:</p><select multiple="" class="form-control" id="types" name="1" size="5" style="min-width: 200px;overflow:auto;"><option>' + response.types.join('</option><option>') + '</option></select><br><button class="btn btn-default btn-sm" id="select_all" >Select All</button>';
+      jQuery('#type_select_div').html(type_html);
+      jQuery('#select_all').click( function() {
+          select_all_options(document.getElementById('types'));
+      });
+      jQuery('#types').change(
+        function() {
+          var location = jQuery('#location_select').val();
+          var types = jQuery(this).val();
+          create_daterangepicker(location,types);
+      });
+    },
+  	error: function(response) {
+  	    alert("An error occurred initializing type multiple select");
+  	}
+  });
+}
+
+function create_daterangepicker(location,types) {
+  jQuery.ajax( {
+  url: '/rest/dates',
+  data: {'location': location, 'types': types},
+  success: function(response) {
 
       var daterange_html = '<p>Select a date range:</p><input class="form-control input-sm" type="text" id="daterange" name="daterange"/>';
-      jQuery('#daterange_div').html(daterange_html);
+      jQuery('#daterange_select_div').html(daterange_html);
       var momentDate = moment(response.latest_date, 'YYYY-MM-DD');  // take max date and get date one month before
       var jsDate = momentDate.toDate();
       jsDate.setMonth(jsDate.getMonth() - 1);
-
 
       jQuery('input[name="daterange"]').daterangepicker(
         {
@@ -174,7 +201,7 @@ function create_type_and_datepicker(location) {
           "endDate": response.latest_date,
           "minDate": response.earliest_date,
           "maxDate": response.latest_date,
-          "opens": "center"
+          "opens": "left"
         },
         function(start, end) {
           startDate = start.format('YYYY-MM-DD');
@@ -182,8 +209,8 @@ function create_type_and_datepicker(location) {
         }
       );
     },
-  	error: function(response) {
-  	    alert("An error occurred initializing daterangepicker");
-  	}
+    error: function(response) {
+        alert("An error occurred initializing daterangepicker");
+    }
   });
 }

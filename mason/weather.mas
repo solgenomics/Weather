@@ -13,39 +13,15 @@
   <div class="row">
     <div class="panel panel-info">
       <div class="panel-heading">Options</div>
-      <div class="panel-body" style="overflow:hidden">
-        <div id="input_form">
-          <table><tr>
-              <td class="col-sm-4 col-md-4 col-lg-4">
-                <div id="location_select_div"></div>
-                <br>
-                <p>Select an interval:</p>
-                <select class="form-control input-sm" id="interval" >
-                  <option value="">
-                  </option><option value="minutes">Individual measurements
-                  </option><option value="hours">Hourly averages
-                  </option><option value="days">Daily averages
-                  </option>
-                </select>
-              </td>
-              <td class="col-sm-4 col-md-4 col-lg-4">
-              <div id="daterange_div"></div>
-              <br>
-              <p>Restrict by time of day:</p>
-                <select class="form-control input-sm" id="restrict" >
-                  <option value="">
-                  </option><option value="day">Daytime measurements only
-                  </option><option value="night">Nighttime measurements only
-                  </option><option value="both">All measurements
-                  </option>
-                </select>
-              </td>
-              <td class="col-sm-4 col-md-4 col-lg-4">
-                <div id="types_div"></div>
-                <br>
-                <button class="btn btn-default btn-sm" id="select_all" >Select All</button>
-              </td>
-          </tr></table>
+      <div class="panel-body form-horizontal" style="overflow:hidden">
+        <div class="row">
+          <div class="col-sm-2 col-md-2 col-lg-2" id="location_select_div"></div>
+          <div class="col-sm-5 col-md-5 col-lg-5" id="type_select_div"></div>
+          <div class="col-sm-5 col-md-5 col-lg-5" id="daterange_select_div"></div>
+        </div><br><br>
+        <div class="row">
+          <div class="col-sm-6 col-md-6 col-lg-6"  id="interval_select_div"></div>
+          <div class="col-sm-6 col-md-6 col-lg-6"  id="time_select_div"></div>
         </div>
       </div>
     <div class="panel-footer">
@@ -66,6 +42,7 @@
   </div>
 </div>
 <br/>
+
 <!--
 <div class="row">
   <div class="panel panel-info">
@@ -79,6 +56,7 @@
 </div>
 <br/>
 -->
+
 <div class="row">
   <div class="panel panel-info">
     <div class="panel-heading">Graphs</div>
@@ -95,6 +73,8 @@
 
 </div>
 </div>
+<div class="col-sm-1 col-md-1 col-lg-2">
+</div>
 </div>
 </div>
 </body>
@@ -102,19 +82,7 @@
 <script>
 jQuery(document).ready(function() {
 
-jQuery('#select_all').click( function() {
-    console.log("select all clicked");
-    select_all_options(document.getElementById('types'));
-});
-
 initialize_events();
 });
-
-function select_all_options(obj) {
-    if (!obj || obj.options.length ==0) { return; }
-    for (var i=0; i<obj.options.length; i++) {
-      obj.options[i].selected = true;
-    }
-}
 
 </script>
