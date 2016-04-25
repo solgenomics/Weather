@@ -12,11 +12,11 @@ function initialize_events() {
      var restrict = jQuery('#restrict label.active input').val()
 
      var type_data = {
-       temperature: ['Temperature', 'Temperature measurements in °C, as gathered by HOBO weather station', '#8C001A'],
-       intensity: ['Intensity', 'Intensity measurements in lum/ftÂ², as gathered by HOBO weather station', '#ffd300'],
-       dew_point: ['Dew Point', 'Dew Point measurements in °C, as gathered by HOBO weather station', '#5cb85c'],
-       relative_humidity: ['Relative Humidity', 'Percent Relative Humidity measurements, as gathered by HOBO weather station', '#5bc0de'],
-       precipitation: ['Precipitation', 'Precipitation totals in mm, as gathered by HOBO weather station', '#428bca']
+       temperature: ['Temperature', '°C','Temperature measurements in °C, as gathered by HOBO weather station', '#8C001A'],
+       intensity: ['Intensity', 'LUX','Intensity measurements in LUX, as gathered by HOBO weather station', '#ffd300'],
+       dew_point: ['Dew Point', '°C', 'Dew Point measurements in °C, as gathered by HOBO weather station', '#5cb85c'],
+       relative_humidity: ['Relative Humidity', '%', 'Percent Relative Humidity measurements, as gathered by HOBO weather station', '#5bc0de'],
+       precipitation: ['Precipitation', 'mm','Precipitation totals in mm, as gathered by HOBO weather station', '#428bca']
      };
 
      jQuery('#temperature').html("");
@@ -114,8 +114,11 @@ function display_timeseries(data, type_data) {
     var converted_data = MG.convert.date(data[type], 'date', "%Y-%m-%d %H:%M:%S");
     MG.data_graphic({
       title: type_string[0],
-      description: type_string[1],
-      color: type_string[2],
+  //    y_label: type_string[1],
+      yax_units: type_string[1],
+      y_scale_type: 'linear',
+      description: type_string[2],
+      color: type_string[3],
       data: converted_data,
       linked: true,
       full_width: true,
@@ -161,7 +164,7 @@ function create_type_multiple_select(location) {
 	url: '/rest/types',
   data: {'location': location},
   success: function(response) {
-      var type_html ='<p>Select data types:</p><select multiple="" class="form-control" id="types" name="1" size="5" style="min-width: 200px;overflow:auto;"><option>' + response.types.join('</option><option>') + '</option></select><br><button class="btn btn-default btn-sm" id="select_all" >Select All</button>';
+      var type_html ='<p>Select data types:</p><select multiple="" class="form-control" id="types" name="1" size="5" style="min-width: 200px;overflow:auto;"><option>' + response.types.join('</option><option>') + '</option></select><br><button class="btn btn-default btn-sm pull-right" id="select_all" >Select All</button>';
       jQuery('#type_select_div').html(type_html);
       jQuery('#select_all').click( function() {
           select_all_options(document.getElementById('types'));
@@ -185,7 +188,7 @@ function create_daterangepicker(location,types) {
   data: {'location': location, 'types': types},
   success: function(response) {
 
-      var daterange_html = '<p>Select a date range:</p><input class="form-control input-sm" type="text" id="daterange" name="daterange"/>';
+      var daterange_html = '<p>Select a date range (defaults to latest month available in database):</p><input class="form-control input-sm" type="text" id="daterange" name="daterange"/>';
       jQuery('#daterange_select_div').html(daterange_html);
       var momentDate = moment(response.latest_date, 'YYYY-MM-DD');  // take max date and get date one month before
       var jsDate = momentDate.toDate();
@@ -201,7 +204,7 @@ function create_daterangepicker(location,types) {
           "endDate": response.latest_date,
           "minDate": response.earliest_date,
           "maxDate": response.latest_date,
-          "opens": "left"
+          "opens": "right"
         },
         function(start, end) {
           startDate = start.format('YYYY-MM-DD');

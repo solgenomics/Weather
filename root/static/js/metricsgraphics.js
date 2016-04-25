@@ -974,10 +974,10 @@ function mg_compute_yax_format (args) {
       yax_format = function (f) {
         if (f < 1.0) {
           // Don't scale tiny values.
-          return args.yax_units + d3.round(f, args.decimals);
+          return d3.round(f, args.decimals) + args.yax_units;
         } else {
           var pf = d3.formatPrefix(f);
-          return args.yax_units + pf.scale(f) + pf.symbol;
+          return pf.scale(f) + pf.symbol + args.yax_units;
         }
       };
     } else { // percentage
@@ -5928,11 +5928,11 @@ function mg_format_y_rollover(args, num, d) {
       if (args.aggregate_rollover) {
         formatted_y = num(d[args.y_accessor]);//number_rollover_format(args.y_rollover_format, d, args.y_accessor);
       } else {
-        formatted_y = args.yax_units + num(d[args.y_accessor]);
+        formatted_y = num(d[args.y_accessor]) + args.yax_units;
       }
     }
     else {
-      formatted_y = args.y_accessor + ': ' + args.yax_units + num(d[args.y_accessor]);
+      formatted_y = args.y_accessor + ': ' + num(d[args.y_accessor]) + args.yax_units;
     }
   }
   return formatted_y;
