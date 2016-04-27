@@ -30,11 +30,6 @@ __PACKAGE__->table("measurement");
   is_nullable: 0
   sequence: 'measurement_measurement_id_seq'
 
-=head2 coordinates
-
-  data_type: 'point'
-  is_nullable: 1
-
 =head2 time
 
   data_type: 'timestamp'
@@ -57,7 +52,7 @@ __PACKAGE__->table("measurement");
   is_foreign_key: 1
   is_nullable: 1
 
-=head2 station_id
+=head2 sensor_id
 
   data_type: 'bigint'
   is_foreign_key: 1
@@ -73,8 +68,6 @@ __PACKAGE__->add_columns(
     is_nullable       => 0,
     sequence          => "measurement_measurement_id_seq",
   },
-  "coordinates",
-  { data_type => "point", is_nullable => 1 },
   "time",
   { data_type => "timestamp", is_nullable => 1 },
   "type_id",
@@ -83,7 +76,7 @@ __PACKAGE__->add_columns(
   { data_type => "real", is_nullable => 1 },
   "file_id",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
-  "station_id",
+  "sensor_id",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
 );
 
@@ -121,18 +114,18 @@ __PACKAGE__->belongs_to(
   },
 );
 
-=head2 station
+=head2 sensor
 
 Type: belongs_to
 
-Related object: L<Weather::Schema::Result::Station>
+Related object: L<Weather::Schema::Result::Sensor>
 
 =cut
 
 __PACKAGE__->belongs_to(
-  "station",
-  "Weather::Schema::Result::Station",
-  { station_id => "station_id" },
+  "sensor",
+  "Weather::Schema::Result::Sensor",
+  { sensor_id => "sensor_id" },
   {
     is_deferrable => 0,
     join_type     => "LEFT",

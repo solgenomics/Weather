@@ -41,12 +41,6 @@ __PACKAGE__->table("station");
   data_type: 'point'
   is_nullable: 1
 
-=head2 detector_id
-
-  data_type: 'bigint'
-  is_foreign_key: 1
-  is_nullable: 1
-
 =head2 location_id
 
   data_type: 'bigint'
@@ -67,8 +61,6 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 100 },
   "coordinates",
   { data_type => "point", is_nullable => 1 },
-  "detector_id",
-  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
   "location_id",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
 );
@@ -86,26 +78,6 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("station_id");
 
 =head1 RELATIONS
-
-=head2 detector
-
-Type: belongs_to
-
-Related object: L<Weather::Schema::Result::Detector>
-
-=cut
-
-__PACKAGE__->belongs_to(
-  "detector",
-  "Weather::Schema::Result::Detector",
-  { detector_id => "detector_id" },
-  {
-    is_deferrable => 0,
-    join_type     => "LEFT",
-    on_delete     => "NO ACTION",
-    on_update     => "NO ACTION",
-  },
-);
 
 =head2 location
 

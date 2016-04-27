@@ -36,6 +36,18 @@ __PACKAGE__->table("cvterm");
   is_nullable: 1
   size: 100
 
+=head2 unit
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 40
+
+=head2 description
+
+  data_type: 'varchar'
+  is_nullable: 1
+  size: 100
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -47,6 +59,10 @@ __PACKAGE__->add_columns(
     sequence          => "cvterm_cvterm_id_seq",
   },
   "name",
+  { data_type => "varchar", is_nullable => 1, size => 100 },
+  "unit",
+  { data_type => "varchar", is_nullable => 1, size => 40 },
+  "description",
   { data_type => "varchar", is_nullable => 1, size => 100 },
 );
 
