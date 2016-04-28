@@ -77,15 +77,11 @@ $schema->txn_begin();
 my $file_row = $schema->resultset("File")->find( { filename => $basename });
 
 if ($file_row) {
-    print STDERR "The file $basename has already been loaded. Please load another file.\n";
-    exit();
+  print STDERR "The file $basename has already been loaded. Please load another file.\n";
+  exit();
 }
 
-my $file_row = $schema->resultset("File")->create(
-    {
-	filename => $basename,
-	filepath => $filepath,
-    });
+my $file_row = $schema->resultset("File")->create({ filename => $basename, filepath => $filepath });
 
 my $file_id = $file_row->file_id();
 
@@ -94,21 +90,18 @@ my $location_id;
 my $location_row = $schema->resultset("Location")->find( { name => $opt_l });
 
 if (!$location_row) {
-    print STDERR "Location $opt_l is not in the database. Insert? ";
-    my $answer = (<STDIN>);
-    chomp($answer);
-    if ($answer =~ /^y/i) {
-	print STDERR "Inserting location $opt_l... ";
-	$location_row = $schema->resultset("Location")->create(
-	    {
-		name => $opt_l,
-	    });
-	print STDERR "Done.\n";
-    }
-    else {
-	print STDERR " Exiting.\n"; exit();
-    }
-    $location_id = $location_row->location_id();
+  print STDERR "Location $opt_l is not in the database. Insert? ";
+  my $answer = (<STDIN>);
+  chomp($answer);
+  if ($answer =~ /^y/i) {
+    print STDERR "Inserting location $opt_l... ";
+    $location_row = $schema->resultset("Location")->create({ name => $opt_l });
+    print STDERR "Done.\n";
+  }
+  else {
+	   print STDERR " Exiting.\n"; exit();
+  }
+  $location_id = $location_row->location_id();
 }
 else {
   $location_id = $location_row->location_id();
@@ -128,8 +121,8 @@ my $parser = Spreadsheet::ParseExcel->new();
 my $book = $parser->parse($opt_i);
 
 if (!$book) {
-    print STDERR "File $opt_i does not exist.\n";
-    exit();
+  print STDERR "File $opt_i does not exist.\n";
+  exit();
 }
 
 #get worksheets
@@ -138,21 +131,21 @@ my $worksheet1 = $book->worksheet('Temp,RH,DP');
 if (!$worksheet1) {
   $worksheet1 = $book->worksheet('Temp, RH, DP');
   if (!$worksheet1) {
-    print STDERR "Neither Temp,RH,DP nor Temp, RH, DP sheet found in workbook.\n";
+    print STDERR "No Temp,RH,DP sheet found in workbook.\n";
   }
 }
 my $worksheet2 = $book->worksheet('Temp,Intensity');
 if (!$worksheet2) {
   $worksheet2 = $book->worksheet('Temp, Intensity');
   if (!$worksheet2) {
-    print STDERR "Neither Temp,Intensity nor Temp, Intensity sheet found in workbook.\n";
+    print STDERR "No Temp,Intensity sheet found in workbook.\n";
   }
 }
 my $worksheet3 = $book->worksheet('Temp,Rain');
 if (!$worksheet3) {
   my $worksheet3 = $book->worksheet('Temp, Rain');
   if (!$worksheet3) {
-    print STDERR "Neither Temp,Rain nor Temp, Rain sheet found in workbook.\n";
+    print STDERR "No Temp,Rain sheet found in workbook.\n";
   }
 }
 
@@ -165,158 +158,146 @@ if ($worksheet3) { push @sensors, get_serial_number($worksheet3->get_cell(1,2)->
 my ($station_exists, $station_id, $station_row);
 
 SENSOR: foreach my $sensor (@sensors) {
-  print STDERR "sensor= $sensor";
   my $sensor_row = $schema->resultset("Sensor")->find( { sensor_id => $sensor });
   if ($sensor_row) {$station_id = $sensor_row->station_id();}
-  print STDERR "sensor_id = $sensor and station_id = $station_id) \n";
+  print STDERR "sensor_id = $sensor";
   if ($station_id) {
+    print STDERR " and station_id = $station_id \n";
     $station_exists =1;
     last SENSOR;
   }
+  else { " and no station_id found \n";}
 }
 
 unless ($station_exists) {
   if ($opt_s) {
-    $station_row = $schema->resultset("Station")->find_or_create(
-        {
-          name => $opt_s,
-    	    location_id => $location_id
-        });
+    $station_row = $schema->resultset("Station")->find_or_create({ name => $opt_s, location_id => $location_id });
   }
   else {
-    $station_row = $schema->resultset("Station")->find_or_create(
-        {
-  	      location_id => $location_id,
-        });
+    $station_row = $schema->resultset("Station")->find_or_create({ location_id => $location_id });
   }
   $station_id = $station_row->station_id();
 }
 
-# parse first worksheet (Temp,RH,DP)
+eval { # load data, rollback if errors
 
-my $plot_title = $worksheet1->get_cell(0,0)->value();
-print "plot title = $plot_title\n";
-my $rh_sensor_sn_cell = $worksheet1->get_cell(1,2)->value();
-my $sensor_id = get_serial_number($rh_sensor_sn_cell);
-print STDERR "Temp,RH,DP sensor serial number: $sensor_id\n";
+  if ($worksheet1) { # parse first worksheet (Temp,RH,DP)
 
-my $row = 2;
-my $col = 0;
+    my $rh_sensor_sn_cell = $worksheet1->get_cell(1,2)->value();
+    my $sensor_id = get_serial_number($rh_sensor_sn_cell);
+    print STDERR "Temp,RH,DP sensor serial number: $sensor_id\n";
+    my $sensor_row = $schema->resultset("Sensor")->find_or_create({ sensor_id => $sensor_id, station_id => $station_id});
 
-my $sensor_row = $schema->resultset("Sensor")->find_or_create(
-    {
-	     sensor_id => $sensor_id,
-       station_id => $station_id
-    });
-
-eval {
-
-    print STDERR "Loading values from Temp,RH,DP worksheet\n";
-
+    print STDERR "Loading Temp,RH,DP worksheet, and reporting operations on first five rows . . .\n";
+    my $row = 2;
+    my $col = 0;
     while (my $index_cell = $worksheet1->get_cell($row, $col)) {
-	my $index = $index_cell->value();
-	print STDERR "Cell value: $index\n";
+	     my $index = $index_cell->value();
 
-	my $time_value;
-	my $time_cell = $worksheet1->get_cell($row, $col + 1);
-	if ($time_cell) {
-	    $time_value = $time_cell->value();
-	}
-	else {
-	    print STDERR "This row ($row) does not have a time value. Skipping...\n";
-	    next();
-	}
-	my $temp_value;
-	my $temp_cell = $worksheet1->get_cell($row, $col + 2);
-	if ($temp_cell) {
-	    $temp_value = $temp_cell->value();
-	    insert_measurement($schema, $file_id, $temp1_cvterm_id, $sensor_id, $time_value, $temp_value);
-	}
+       my $time_cell = $worksheet1->get_cell($row, $col + 1);
+       my $time_value = $time_cell->value();
+       if (!$time_value) {
+         print STDERR "This row ($row), with index $index does not have a time value. Skipping...\n";
+         $row++;
+         next();
+       }
 
-	my $rh_value;
-	my $rh_cell = $worksheet1->get_cell($row, $col + 3);
-	if ($rh_cell) {
-	    $rh_value = $rh_cell->value();
-	    insert_measurement($schema, $file_id, $rh_cvterm_id, $sensor_id, $time_value, $rh_value);
-	}
+       my $temp_value;
+       my $temp_cell = $worksheet1->get_cell($row, $col + 2);
+       if ($temp_cell) {
+         $temp_value = $temp_cell->value();
+         if ($index < 6) { insert_measurement($schema, $file_id, $temp1_cvterm_id, $sensor_id, $time_value, $temp_value, $index);}
+         else { insert_measurement($schema, $file_id, $temp1_cvterm_id, $sensor_id, $time_value, $temp_value);}
+       } elsif ($index <6){
+         print STDERR "row with index $index: No value at time $time_value for type_id $temp1_cvterm_id \n";
+       }
 
-	my $dp_value;
-	my $dp_cell = $worksheet1->get_cell($row, $col + 4);
-	if ($dp_cell) {
-	    $dp_value = $dp_cell->value();
-	    insert_measurement($schema, $file_id, $dp_cvterm_id, $sensor_id,  $time_value, $dp_value);
-	}
-	$row++;
-    }
+       my $rh_value;
+       my $rh_cell = $worksheet1->get_cell($row, $col + 3);
+       if ($rh_cell) {
+         $rh_value = $rh_cell->value();
+         if ($index < 6) { insert_measurement($schema, $file_id, $rh_cvterm_id, $sensor_id, $time_value, $rh_value, $index);}
+         else { insert_measurement($schema, $file_id, $rh_cvterm_id, $sensor_id, $time_value, $rh_value);}
+       } elsif ($index <6){
+         print STDERR "row with index $index: No value at time $time_value for type_id $rh_cvterm_id \n";
+       }
 
-    print STDERR "Loading values from Temp,Intensity worksheet\n";
-    $row = 2; $col = 0;
+       my $dp_value;
+       my $dp_cell = $worksheet1->get_cell($row, $col + 4);
+       if ($dp_cell) {
+         $dp_value = $dp_cell->value();
+         if ($index < 6) { insert_measurement($schema, $file_id, $dp_cvterm_id, $sensor_id,  $time_value, $dp_value, $index);}
+         else { insert_measurement($schema, $file_id, $dp_cvterm_id, $sensor_id,  $time_value, $dp_value);}
+       } elsif ($index <6){
+         print STDERR "row with index $index: No value at time $time_value for type_id $dp_cvterm_id \n";
+       }
+       $row++;
+     }
+   }
+
+   if ($worksheet2) { # parse second worksheet (Temp,Intensity)
 
     my $intensity_sensor_sn_cell = $worksheet2->get_cell(1,2)->value();
     my $sensor_id = get_serial_number($intensity_sensor_sn_cell);
     print STDERR "Temp,Intensity sensor serial number: $sensor_id\n";
+    my $sensor_row = $schema->resultset("Sensor")->find_or_create({ sensor_id => $sensor_id, station_id => $station_id });
 
+    print STDERR "Loading Temp,Intensity worksheet, and reporting operations on first five rows . . .\n";
     my $row = 2;
     my $col = 0;
-
-    my $sensor_row = $schema->resultset("Sensor")->find_or_create(
-        {
-    	     sensor_id => $sensor_id,
-           station_id => $station_id
-        });
-
-
-  my ($start_time, $end_time);
-  my $start_time_counter = 0;
+    my ($start_time, $end_time);
+    my $start_time_counter = 0;
 
     while (my $index_cell = $worksheet2->get_cell($row, $col)) {
-	my $index = $index_cell->value();
+      my $index = $index_cell->value();
 
-	my $time_cell = $worksheet2->get_cell($row, $col+1);
-	my $time_value;
-	if ($time_cell) {
-	    $time_value = $time_cell->value();
-	}
-	else {
-	    print STDERR "No time value for row $index. Skipping...\n";
-	    next();
-	}
-
-  my $temp_value;
-  my $temp_cell = $worksheet2->get_cell($row, $col + 2);
-  if ($temp_cell) {
-      $temp_value = $temp_cell->value();
-      insert_measurement($schema, $file_id, $temp2_cvterm_id, $sensor_id, $time_value, $temp_value);
-  }
-
-	my $intensity_cell = $worksheet2->get_cell($row, $col+3);
-	my $intensity_value;
-	if ($intensity_cell) {
-	    $intensity_value = $intensity_cell->value();
-      if ($intensity_value == 0 && $start_time_counter < 3) {
-        $start_time = $time_value;
-        $start_time_counter++;
+      my $time_cell = $worksheet2->get_cell($row, $col + 1);
+      my $time_value = $time_cell->value();
+      if (!$time_value) {
+        print STDERR "This row ($row), with index $index does not have a time value. Skipping...\n";
+        $row++;
+        next();
       }
-	    insert_measurement($schema, $file_id, $intensity_cvterm_id, $sensor_id, $time_value, $intensity_value);
-	}
-	$row++;
+
+      my $temp_value;
+      my $temp_cell = $worksheet2->get_cell($row, $col + 2);
+      if ($temp_cell) {
+        $temp_value = $temp_cell->value();
+        if ($index < 6) { insert_measurement($schema, $file_id, $temp2_cvterm_id, $sensor_id, $time_value, $temp_value, $index);}
+        else { insert_measurement($schema, $file_id, $temp2_cvterm_id, $sensor_id, $time_value, $temp_value);}
+      } elsif ($index <6){
+        print STDERR "row with index $index: No value at time $time_value for type_id $temp2_cvterm_id \n";
+      }
+
+	    my $intensity_cell = $worksheet2->get_cell($row, $col+3);
+	    my $intensity_value;
+	    if ($intensity_cell) {
+        $intensity_value = $intensity_cell->value();
+        if ($intensity_value == 0 && $start_time_counter < 3) {  #find timestamp of first nighttime intensity measurements (those with value of 0) to use in calculation of daylengths. Make sure that a few are zero in a row, and not its not just a weird measurement from a sensor that was set up in the middle of the day
+          $start_time = $time_value;
+          $start_time_counter++;
+        }
+        if ($index < 6) { insert_measurement($schema, $file_id, $intensity_cvterm_id, $sensor_id, $time_value, $intensity_value, $index);}
+	      else { insert_measurement($schema, $file_id, $intensity_cvterm_id, $sensor_id, $time_value, $intensity_value);}
+      } elsif ($index <6){
+        print STDERR "row with index $index: No value at time $time_value for type_id $intensity_cvterm_id \n";
+      }
+	    $row++;
     }
 
     my($min_row, $max_row) = $worksheet2->row_range();
     $row = $max_row;
-    while (my $index_cell = $worksheet2->get_cell($row, $col)) {
+    while (my $index_cell = $worksheet2->get_cell($row, $col)) { # starting with most recent measurements, iterate backwards to find the timestamp of latest nighttime intensity measurement (value of 0) to use in calculation of daylengths.
       my $index = $index_cell->value();
 
-      my $time_cell = $worksheet2->get_cell($row, $col+1);
-      my $time_value;
-    	if ($time_cell) {
-    	    $time_value = $time_cell->value();
-    	}
-    	else {
-    	    print STDERR "No time value for row $index. Skipping...\n";
+      my $time_cell = $worksheet2->get_cell($row, $col + 1);
+      my $time_value = $time_cell->value();
+      if (!$time_value) {
+          print STDERR "This row ($row), with index $index does not have a time value. Skipping...\n";
           $row--;
-    	    next();
-    	}
+          next();
+      }
+
       my $intensity_cell = $worksheet2->get_cell($row, $col+3);
     	my $intensity_value;
     	if ($intensity_cell) {
@@ -329,65 +310,62 @@ eval {
       $row--;
     }
 
-    insert_daylengths($schema, $file_id, $daylength_cvterm_id, $start_time, $end_time, $intensity_cvterm_id, $sensor_id);
+    insert_daylengths($schema, $file_id, $daylength_cvterm_id, $start_time, $end_time, $intensity_cvterm_id, $sensor_id); #using earliest and latest intensity 0 measurements, use sql to calculate daylengths
+  }
 
-    print STDERR "Loading values from Temp,Rain worksheet\n";
-    $row =2, $col = 0;
+   if ($worksheet3) { # parse second worksheet (Temp,Rain)
 
     my $rain_sensor_sn_cell = $worksheet3->get_cell(1,2)->value();
     my $sensor_id = get_serial_number($rain_sensor_sn_cell);
     print STDERR "Temp,Rain sensor serial number: $sensor_id\n";
+    my $sensor_row = $schema->resultset("Sensor")->find_or_create({ sensor_id => $sensor_id, station_id => $station_id });
 
+    print STDERR "Loading Temp,Rain worksheet, and reporting operations on first five rows . . .\n";
     my $row = 2;
     my $col = 0;
-
-    my $sensor_row = $schema->resultset("Sensor")->find_or_create(
-        {
-    	     sensor_id => $sensor_id,
-           station_id => $station_id
-        });
+    my $old_precipitation_value =0;
 
     while (my $index_cell = $worksheet3->get_cell($row, $col)) {
-	my $index = $index_cell->value();
-	print STDERR "Parse line $index...\n";
-	my $time_cell = $worksheet3->get_cell($row, $col+1);
-	my $time_value;
-	if ($time_cell) {
-	    $time_value = $time_cell->value();
-	}
+      my $index = $index_cell->value();
+      #print STDERR "Precip Index = $index\n";
 
-	else {
-	    print STDERR "No time value for row $index. Skipping...\n";
-	    next();
-	}
+      my $time_cell = $worksheet3->get_cell($row, $col + 1);
+      my $time_value = $time_cell->value();
+      if (!$time_value) {
+        print STDERR "This row ($row), with index $index does not have a time value. Skipping...\n";
+        $row++;
+        next();
+      }
 
-  my $temp_value;
-  my $temp_cell = $worksheet3->get_cell($row, $col + 2);
-  if ($temp_cell) {
-      $temp_value = $temp_cell->value();
-      insert_measurement($schema, $file_id, $temp3_cvterm_id, $sensor_id, $time_value, $temp_value);
-  }
+      my $temp_value;
+      my $temp_cell = $worksheet3->get_cell($row, $col + 2);
+      if ($temp_cell) {
+        $temp_value = $temp_cell->value();
+        if ($index < 6) { insert_measurement($schema, $file_id, $temp3_cvterm_id, $sensor_id, $time_value, $temp_value, $index);}
+        else { insert_measurement($schema, $file_id, $temp3_cvterm_id, $sensor_id, $time_value, $temp_value);}
+      } elsif ($index <6){
+        print STDERR "row with index $index: No value at time $time_value for type_id $temp3_cvterm_id \n";
+      }
 
-	my $precipitation_value;
-  my $old_precipitation_value =0;
-	my $precipitation_cell = $worksheet3->get_cell($row, $col+3);
-	if ($precipitation_cell) {
-	    $precipitation_value = $precipitation_cell->value();
-
-	    $precipitation_value = $precipitation_value - $old_precipitation_value;
-      print STDERR " insterting precip value $precipitation_value . . .\n";
-	    insert_measurement($schema, $file_id, $precipitation_cvterm_id, $sensor_id, $time_value, $precipitation_value);
-
-	    $old_precipitation_value = $precipitation_value;
-
-	}
-	else {
-	    print STDERR "No value for preciptation... adding 0.\n";
-	    insert_measurement($schema, $file_id, $precipitation_cvterm_id, $sensor_id, $time_value, 0);
-	}
-	$row++;
+      my $precipitation_cell = $worksheet3->get_cell($row, $col+3);
+  #    if ($precipitation_cell && $precipitation_cell->value() == 0) {
+  #      print STDERR "row with index $index: 0 value at time $time_value for type_id $temp3_cvterm_id is an artifact, skipping it \n";
+  #    }
+  #    elsif ($precipitation_cell) {
+      if ($precipitation_cell) {
+        my $raw_precipitation_value = $precipitation_cell->value();
+	      my $calc_precipitation_value = $raw_precipitation_value - $old_precipitation_value;
+	      if ($index < 6) { insert_measurement($schema, $file_id, $precipitation_cvterm_id, $sensor_id, $time_value, $calc_precipitation_value, $index);}
+        else {insert_measurement($schema, $file_id, $precipitation_cvterm_id, $sensor_id, $time_value, $calc_precipitation_value);}
+	      $old_precipitation_value = $raw_precipitation_value;
+      }
+	    else {
+	      if ($index < 6) { insert_measurement($schema, $file_id, $precipitation_cvterm_id, $sensor_id, $time_value, 0, $index);}
+        else {insert_measurement($schema, $file_id, $precipitation_cvterm_id, $sensor_id, $time_value, 0);}
+      }
+	    $row++;
     }
-
+  }
 };
 
 if ($@) {
@@ -416,8 +394,12 @@ sub insert_measurement {
     my $sensor_id = shift;
     my $time = shift;
     my $value = shift;
+    my $index = shift;
 
-    print STDERR "Inserting $value ($cvterm_id) at timepoint $time\n";
+    if ($index) {
+      print STDERR "row with index $index: Inserting value $value at time $time with type_id $cvterm_id  \n";
+    }
+
     my $temp_rs = $schema->resultset("Measurement")->create(
 	{
       time => $time,
@@ -429,6 +411,8 @@ sub insert_measurement {
 }
 
 =comment
+Could try to implement this unique check (borrowed from sgn phenotype upload) in addition to file check, but maybe not worth the cost in speed
+
 sub check_unique {
   my %check_unique_db;
   my $sql = "SELECT value, cvalue_id, uniquename FROM phenotype WHERE value is not NULL; ";
@@ -467,9 +451,12 @@ sub insert_daylengths {
   my $h = $schema->storage()->dbh()->prepare($day_stats_query);
   $h->execute($start_time, $end_time, $intensity_cvterm_id, $sensor_id);
 
+  my $counter = 1;
   while (my ($day, $daylength) = $h->fetchrow_array()) {
-    print STDERR " inserting calulated daylength $daylength . . .\n";
-	  insert_measurement($schema, $file_id, $daylength_cvterm_id, $sensor_id, $day, $daylength);
+    #print STDERR " inserting calulated daylength $daylength . . .\n";
+	  if ($counter < 6) { insert_measurement($schema, $file_id, $daylength_cvterm_id, $sensor_id, $day, $daylength, $counter);}
+    else { insert_measurement($schema, $file_id, $daylength_cvterm_id, $sensor_id, $day, $daylength);}
+    $counter++;
   }
   print STDERR "daylength insert finished!\n";
 }
