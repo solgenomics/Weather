@@ -12,18 +12,23 @@ function initialize_events() {
      var restrict = jQuery('#restrict label.active input').val()
 
      var type_data = {
-       temperature: ['Temperature', '°C','Temperature measurements in °C, as gathered by HOBO weather station', '#8C001A'],
+       temp: ['Temperature', '°C','Temperature measurements in °C, as gathered by HOBO weather station', '#8C001A'],
+       i_temp: ['Temperature from Intensity Sensor', '°C','Temperature measurements in °C, as gathered by HOBO weather station', '#8C001A'],
+       r_temp: ['Temperature from Rain Sensor', '°C','Temperature measurements in °C, as gathered by HOBO weather station', '#8C001A'],
        intensity: ['Intensity', 'LUX','Intensity measurements in LUX, as gathered by HOBO weather station', '#ffd300'],
-       dew_point: ['Dew Point', '°C', 'Dew Point measurements in °C, as gathered by HOBO weather station', '#5cb85c'],
-       relative_humidity: ['Relative Humidity', '%', 'Percent Relative Humidity measurements, as gathered by HOBO weather station', '#5bc0de'],
-       precipitation: ['Precipitation', 'mm','Precipitation totals in mm, as gathered by HOBO weather station', '#428bca']
+       dp: ['Dew Point', '°C', 'Dew Point measurements in °C, as gathered by HOBO weather station', '#5cb85c'],
+       rh: ['Relative Humidity', '%', 'Percent Relative Humidity measurements, as gathered by HOBO weather station', '#5bc0de'],
+       rain: ['Precipitation', 'mm','Precipitation totals in mm, as gathered by HOBO weather station', '#428bca'],
+       day_length: ['Daylength', 'min','Daylength in min, as calculated from intensity data gathered by HOBO weather station', '#428bca']
      };
 
-     jQuery('#temperature').html("");
-     jQuery('#intensity').html("");
-     jQuery('#dew_point').html("");
-     jQuery('#relative_humidity').html("");
-     jQuery('#precipitation').html("");
+     jQuery('#graphs_body').html("");
+     var numTypes = types.length;
+     for (var i = 0; i < numTypes; i++) {
+       console.log("type number i ="+types[i]);
+       jQuery('#graphs_body').append("<div id="+types[i]+"></div>");
+     }
+
      var data = get_data(location, start_date, end_date, interval, restrict, type_data, types);
    });
 }

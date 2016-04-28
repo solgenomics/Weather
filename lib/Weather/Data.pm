@@ -45,19 +45,6 @@ sub get_data {
 
     print STDERR "Processing weather data: ". join ", ", ($self->start_date(), $self->end_date(), $self->location(), $self->types())."\n";
 
-    my $location_row = $self->schema()->resultset("Location")->find({ name => $self->location() });
-    if (!$location_row) {
-			return { error => "Unknown location (".$self->location().")" };
-    }
-
-    my $station_id_rs = $self->schema()->resultset("Station")->search( { 'location.name' => $location_row->name() }, { join => 'location' });
-    my @station_ids = map { $_->station_id() } $station_id_rs->all();
-
-    print STDERR Dumper(\@station_ids);
-
-    my $station_ids_str = join ", ", @station_ids;
-		print STDERR "Station id string: $station_ids_str";
-
 		my $interval = $self->interval();
 		my $restrict = $self->restrict();
 		print STDERR "Interval = $interval \n";
@@ -65,13 +52,15 @@ sub get_data {
 		my $type_ref = $self->types();
 		my @types = @$type_ref;
 		print STDERR "Types = @types \n";
+		my @sensor_ids = get_sensor_ids($self);
+
 		my (@day_stats, @stats, $values, $day_filter);
 
 		if ($restrict eq 'day' || $restrict eq 'night') {
 			my $day_stats_query =
 				"SELECT date_trunc('day', time) AS day, min(time) AS sunrise, max(time) AS sunset, (max(time) - min(time)) AS daylength
 				FROM measurement
-				WHERE time > ? AND time <= ? AND type_id=? AND station_id IN (?) AND value > 0
+				WHERE time > ? AND time <= ? AND type_id=? AND sensor_id IN (@{[join',', ('?') x @sensor_ids]}) AND value > 0
 				GROUP BY 1 ORDER BY 1";
 
 			my $intensity_row = $self->schema()->resultset("Cvterm")->find( { name => 'intensity' });
@@ -82,7 +71,7 @@ sub get_data {
 			print STDERR "INTENSITY_ID = $intensity_id\n";
 
 			my $h = $self->schema()->storage()->dbh()->prepare($day_stats_query);
-			$h->execute($self->start_date, $self->end_date, $intensity_id, $station_ids_str);
+			$h->execute($self->start_date, $self->end_date, $intensity_id, @sensor_ids);
 
 			my (@day_ranges, $start);
 			my $counter = 0;
@@ -114,19 +103,25 @@ sub get_data {
 		};
 
 		my $value_selects = {
-			temperature => " avg(value) as value",
+			temp => " avg(value) as value",
+			i_temp => " avg(value) as value",
+			r_temp => " avg(value) as value",
 			intensity => " avg(value) as value",
-			dew_point => " avg(value) as value",
-			relative_humidity => " avg(value) as value",
-			precipitation => " sum(value) as value"
+			dp => " avg(value) as value",
+			rh => " avg(value) as value",
+			rain => " sum(value) as value",
+			day_length => " avg(value) as value"
 		};
 
 		my $sigfig_selects = {
-			temperature => "'FM999999999.000'",
+			temp => "'FM999999999.000'",
+			i_temp => "'FM999999999.000'",
+			r_temp => "'FM999999999.000'",
 			intensity => "'FM999999999'",
-			dew_point => "'FM999999999.000'",
-			relative_humidity => "'FM999999999.000'",
-			precipitation => "'FM999999999.0'"
+			dp => "'FM999999999.000'",
+			rh => "'FM999999999.000'",
+			rain => "'FM999999999.0'",
+			day_length => "'FM999999999'"
 		};
 
 		for my $type (@types) {
@@ -137,13 +132,13 @@ sub get_data {
 			my $type_id = $type_row->cvterm_id();
 			print STDERR "TYPE_ID = $type_id\n";
 
-			#my $q = "SELECT " . $interval_selects->{$interval} . $value_selects->{$type} . " FROM measurement WHERE time > ? AND time <= ? AND type_id=? AND station_id IN (?) GROUP BY 1 ORDER BY 1";
-			my $q = "SELECT " . $interval_selects->{$interval} . $value_selects->{$type} . " FROM measurement WHERE $day_filter AND type_id=? AND station_id IN (?) GROUP BY 1 ORDER BY 1";
+			#my $q = "SELECT " . $interval_selects->{$interval} . $value_selects->{$type} . " FROM measurement WHERE time > ? AND time <= ? AND type_id=? AND sensor_id IN (?) GROUP BY 1 ORDER BY 1";
+			my $q = "SELECT " . $interval_selects->{$interval} . $value_selects->{$type} . " FROM measurement WHERE $day_filter AND type_id=? AND sensor_id IN (@{[join',', ('?') x @sensor_ids]}) GROUP BY 1 ORDER BY 1";
 			print STDERR "Query for $type: $q\n";
 
 			my $h = $self->schema()->storage()->dbh()->prepare($q);
-    	#$h->execute($self->start_date, $self->end_date, $type_id, $station_ids_str);
-			$h->execute($type_id, $station_ids_str);
+    	#$h->execute($self->start_date, $self->end_date, $type_id, $sensor_ids_str);
+			$h->execute($type_id, @sensor_ids);
 
 			my @measurements;
 			while (my ($time, $value) = $h->fetchrow_array()) {
@@ -156,8 +151,8 @@ sub get_data {
 			print STDERR "Summary query= $summary_q";
 
 			$h = $self->schema()->storage()->dbh()->prepare($summary_q);
-    	#$h->execute($self->start_date, $self->end_date, $type_id, $station_ids_str);
-			$h->execute($type_id, $station_ids_str);
+    	#$h->execute($self->start_date, $self->end_date, $type_id, $sensor_ids_str);
+			$h->execute($type_id, @sensor_ids);
 			my ($min, $max, $average, $std_dev, $total) = $h->fetchrow_array();
 			print STDERR "average for $type = $average \n";
 
@@ -173,59 +168,26 @@ sub get_data {
 
 }
 
-sub calculate_sun_rise_sun_set {
-    my $class = shift;
-    my $location_id = shift;
+sub get_sensor_ids {
+	my $self = shift;
+	my $location = $self->location();
 
-    my $schema = shift;
-
-    my $type_row = $schema->resultset("Cvterm")->find( { name => "Intensity" });
-    my $sunrise_row = $schema->resultset("Cvterm")->find( { name => "Sunrise" });
-    my $sunset_row = $schema->resultset("Cvterm")->find( { name => "Sunset" });
-
-    my $q = "SELECT time, value from measurement where location = ? and type_id = ?";
-
-
-    my $h = $schema->storage()->dbh()->prepare($q);
-
-    $h->execute($location_id, $type_row->cvterm_id());
-
-    my $intensities = $h->fetchall_arrayref();
-
-    my $event = "";
-    my $previous_phase = "";
-    foreach my $i (@$intensities) {
-	my $current_phase = "";
-	if ($i->[1] == 0) { $current_phase = "night"; }
-	else {
-	    $current_phase = "day";
-	}
-	if ( ($current_phase ne $previous_phase) && $current_phase eq "night") {
-	    $event = "Sunset";
-	}
-	if ( ($current_phase ne $previous_phase) && $current_phase eq "day") {
-	    $event = "Sunrise";
+	my $location_row = $self->schema()->resultset("Location")->find({ name => $self->location() });
+	if (!$location_row) {
+		return { error => "Unknown location (".$self->location().")" };
 	}
 
+	my $station_id_rs = $self->schema()->resultset("Station")->search( { 'location.name' => $location_row->name() }, { join => 'location' });
+	my @station_ids = map { $_->station_id() } $station_id_rs->all();
 
+	my @sensor_ids;
+	foreach my $station_id (@station_ids) {
+		my $sensor_id_rs = $self->schema()->resultset("Sensor")->search( { 'station.station_id' => $station_id }, { join => 'station' });
+		@sensor_ids = map { $_->sensor_id() } $sensor_id_rs->all();
+	}
 
-    }
-
-    my $uq = "UPDATE measurement set daylight=true WHERE time >= ? - extract(minute from '0:15'::Date) and time <= ?";
-    my $qh  = $schema->storage()->dbh()->prepare($uq);
-
-    print STDERR "\n";
-
-}
-
-sub day_length {
-    my $self = shift;
-    $self->set_type("intensity");
-    my $data = $self->_get_data();
-
-
-
-
+	print STDERR "Sensor ids = ".Dumper(\@sensor_ids);
+	return @sensor_ids;
 }
 
 1;

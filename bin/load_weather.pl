@@ -115,8 +115,8 @@ else {
 }
 
 my $temp1_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'temp', unit => '°C', description =>'Temperature'}) ->cvterm_id();
-my $temp2_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'temp_intensity_sensor', unit => '°C', description =>'Temperature from Intensity Sensor'}) ->cvterm_id();
-my $temp3_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'temp_rain_sensor', unit => '°C', description =>'Temperature from Precipitation Sensor'}) ->cvterm_id();
+my $temp2_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'i_temp', unit => '°C', description =>'Temperature from Intensity Sensor'}) ->cvterm_id();
+my $temp3_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'r_temp', unit => '°C', description =>'Temperature from Precipitation Sensor'}) ->cvterm_id();
 my $rh_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'rh', unit => '%', description =>'Relative Humidity'})->cvterm_id();
 my $dp_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'dp', unit => '°C', description =>'Dew Point' } )->cvterm_id();
 my $intensity_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'intensity', unit => 'LUX', description =>'Intensity' })->cvterm_id();
