@@ -50,6 +50,7 @@ use Term::ReadKey;
 use File::Basename;
 use Spreadsheet::ParseExcel;
 use lib 'lib/';
+use utf8;
 use Weather::Schema;
 
 our($opt_H, $opt_D, $opt_U, $opt_i, $opt_l, $opt_s);
@@ -120,7 +121,7 @@ my $rh_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'rh',
 my $dp_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'dp', unit => '°C', description =>'Dew Point' } )->cvterm_id();
 my $intensity_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'intensity', unit => 'LUX', description =>'Intensity' })->cvterm_id();
 my $precipitation_cvterm_id = $schema->resultset("Cvterm")->find_or_create({ name=> 'rain', unit => 'mm', description =>'Precipitation' })->cvterm_id();
-my $daylength_cvterm_id = $schema->resultset("Cvterm")->find_or_create({ name=> 'day_length' unit => 'hrs', description =>'Day Length' })->cvterm_id();
+my $daylength_cvterm_id = $schema->resultset("Cvterm")->find_or_create({ name=> 'day_length', unit => 'min', description =>'Day Length' })->cvterm_id();
 
 
 my $parser = Spreadsheet::ParseExcel->new();
@@ -133,30 +134,40 @@ if (!$book) {
 
 #get worksheets
 
-$worksheet1 = $book->worksheet('Temp,RH,DP');
+my $worksheet1 = $book->worksheet('Temp,RH,DP');
 if (!$worksheet1) {
-    print STDERR "Temp,RH,DP sheet not found in workbook.\n";
+  $worksheet1 = $book->worksheet('Temp, RH, DP');
+  if (!$worksheet1) {
+    print STDERR "Neither Temp,RH,DP nor Temp, RH, DP sheet found in workbook.\n";
+  }
 }
-$worksheet2 = $book->worksheet('Temp,Intensity');
+my $worksheet2 = $book->worksheet('Temp,Intensity');
 if (!$worksheet2) {
-    print STDERR "Temp,Intensity sheet not found in workbook.\n";
+  $worksheet2 = $book->worksheet('Temp, Intensity');
+  if (!$worksheet2) {
+    print STDERR "Neither Temp,Intensity nor Temp, Intensity sheet found in workbook.\n";
+  }
 }
-$worksheet3 = $book->worksheet('Temp,Rain');
+my $worksheet3 = $book->worksheet('Temp,Rain');
 if (!$worksheet3) {
-    print STDERR "Temp,Rain sheet not found in workbook.\n";
+  my $worksheet3 = $book->worksheet('Temp, Rain');
+  if (!$worksheet3) {
+    print STDERR "Neither Temp,Rain nor Temp, Rain sheet found in workbook.\n";
+  }
 }
 
 #get sensor ids and find or create station
 my @sensors;
-if ($worksheet1) { push @sensors, $worksheet1->get_cell(1,2)->value(); }
-if ($worksheet2) { push @sensors, $worksheet2->get_cell(1,2)->value(); }
-if ($worksheet3) { push @sensors, $worksheet3->get_cell(1,2)->value(); }
+if ($worksheet1) { push @sensors, get_serial_number($worksheet1->get_cell(1,2)->value()); }
+if ($worksheet2) { push @sensors, get_serial_number($worksheet2->get_cell(1,2)->value()); }
+if ($worksheet3) { push @sensors, get_serial_number($worksheet3->get_cell(1,2)->value()); }
 
-my $station_exists;
+my ($station_exists, $station_id, $station_row);
 
 SENSOR: foreach my $sensor (@sensors) {
-  my $sensor_row = $self->schema()->resultset("Sensor")->find( { sensor_id => $sensor });
-  my $station_id = $sensor_row->station_id();
+  print STDERR "sensor= $sensor";
+  my $sensor_row = $schema->resultset("Sensor")->find( { sensor_id => $sensor });
+  if ($sensor_row) {$station_id = $sensor_row->station_id();}
   print STDERR "sensor_id = $sensor and station_id = $station_id) \n";
   if ($station_id) {
     $station_exists =1;
@@ -166,14 +177,14 @@ SENSOR: foreach my $sensor (@sensors) {
 
 unless ($station_exists) {
   if ($opt_s) {
-    my $station_row = $schema->resultset("Station")->find_or_create(
+    $station_row = $schema->resultset("Station")->find_or_create(
         {
           name => $opt_s,
     	    location_id => $location_id
         });
   }
   else {
-    my $station_row = $schema->resultset("Station")->find_or_create(
+    $station_row = $schema->resultset("Station")->find_or_create(
         {
   	      location_id => $location_id,
         });
@@ -292,7 +303,8 @@ eval {
     }
 
     my($min_row, $max_row) = $worksheet2->row_range();
-    while (my $index_cell = $worksheet2->get_cell($max_row, $col)) {
+    $row = $max_row;
+    while (my $index_cell = $worksheet2->get_cell($row, $col)) {
       my $index = $index_cell->value();
 
       my $time_cell = $worksheet2->get_cell($row, $col+1);
@@ -302,6 +314,7 @@ eval {
     	}
     	else {
     	    print STDERR "No time value for row $index. Skipping...\n";
+          $row--;
     	    next();
     	}
       my $intensity_cell = $worksheet2->get_cell($row, $col+3);
@@ -313,15 +326,15 @@ eval {
           last();
         }
       }
-      $max_row--;
+      $row--;
     }
 
-    insert_daylengths($start_time, $end_time, $intensity_cvterm_id, $sensor_id);
+    insert_daylengths($schema, $file_id, $daylength_cvterm_id, $start_time, $end_time, $intensity_cvterm_id, $sensor_id);
 
     print STDERR "Loading values from Temp,Rain worksheet\n";
     $row =2, $col = 0;
 
-    my $rain_sensor_sn_cell = $worksheet2->get_cell(1,2)->value();
+    my $rain_sensor_sn_cell = $worksheet3->get_cell(1,2)->value();
     my $sensor_id = get_serial_number($rain_sensor_sn_cell);
     print STDERR "Temp,Rain sensor serial number: $sensor_id\n";
 
@@ -415,6 +428,7 @@ sub insert_measurement {
 	});
 }
 
+=comment
 sub check_unique {
   my %check_unique_db;
   my $sql = "SELECT value, cvalue_id, uniquename FROM phenotype WHERE value is not NULL; ";
@@ -429,8 +443,12 @@ sub check_unique {
 	 $warning_message = $warning_message."<small>This combination exists in database: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
   }
 }
+=cut
 
 sub insert_daylengths {
+  my $schema = shift;
+  my $file_id = shift;
+  my $daylength_cvterm_id = shift;
   my $start_time = shift;
   print STDERR "Start time = $start_time\n";
   my $end_time = shift;
@@ -441,16 +459,16 @@ sub insert_daylengths {
   print STDERR "Sensor_id = $sensor_id\n";
 
   my $day_stats_query =
-    "SELECT date_trunc('day', time) AS day, (max(time) - min(time)) AS daylength
+    "SELECT date_trunc('day', time) AS day, (EXTRACT(epoch FROM (max(time) - min(time)))/60)::int AS daylength
     FROM measurement
     WHERE time > ? AND time <= ? AND type_id=? AND sensor_id IN (?) AND value > 0
     GROUP BY 1 ORDER BY 1";
 
-  my $h = $self->schema()->storage()->dbh()->prepare($day_stats_query);
+  my $h = $schema->storage()->dbh()->prepare($day_stats_query);
   $h->execute($start_time, $end_time, $intensity_cvterm_id, $sensor_id);
 
   while (my ($day, $daylength) = $h->fetchrow_array()) {
-    print STDERR " insterting calulated daylength $daylength . . .\n";
+    print STDERR " inserting calulated daylength $daylength . . .\n";
 	  insert_measurement($schema, $file_id, $daylength_cvterm_id, $sensor_id, $day, $daylength);
   }
   print STDERR "daylength insert finished!\n";

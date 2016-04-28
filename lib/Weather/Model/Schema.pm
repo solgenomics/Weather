@@ -5,8 +5,10 @@ use base 'Catalyst::Model::DBIC::Schema';
 
 __PACKAGE__->config(
     schema_class => 'Weather::Schema',
-    
-    
+
+    connect_info => {
+      pg_enable_utf8 => 1,
+    }
 );
 
 =head1 NAME

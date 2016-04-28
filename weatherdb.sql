@@ -102,39 +102,6 @@ ALTER SEQUENCE cvterm_cvterm_id_seq OWNED BY cvterm.cvterm_id;
 
 
 --
--- Name: detector; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE detector (
-    detector_id integer NOT NULL,
-    identifier character varying(100)
-);
-
-
-ALTER TABLE detector OWNER TO postgres;
-
---
--- Name: detector_detector_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE detector_detector_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE detector_detector_id_seq OWNER TO postgres;
-
---
--- Name: detector_detector_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE detector_detector_id_seq OWNED BY detector.detector_id;
-
-
---
 -- Name: file; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -302,13 +269,6 @@ ALTER TABLE ONLY cvterm ALTER COLUMN cvterm_id SET DEFAULT nextval('cvterm_cvter
 
 
 --
--- Name: detector_id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY detector ALTER COLUMN detector_id SET DEFAULT nextval('detector_detector_id_seq'::regclass);
-
-
---
 -- Name: file_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -372,22 +332,6 @@ SELECT pg_catalog.setval('cvterm_cvterm_id_seq', 16, true);
 
 
 --
--- Data for Name: detector; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY detector (detector_id, identifier) FROM stdin;
-5	10635559
-\.
-
-
---
--- Name: detector_detector_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('detector_detector_id_seq', 5, true);
-
-
---
 -- Data for Name: file; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -407,7 +351,6 @@ SELECT pg_catalog.setval('file_file_id_seq', 11, true);
 --
 
 COPY location (location_id, name, geolocation) FROM stdin;
-3	Namulonge	\N
 \.
 
 
@@ -470,14 +413,6 @@ ALTER TABLE ONLY account
 
 ALTER TABLE ONLY cvterm
     ADD CONSTRAINT cvterm_pkey PRIMARY KEY (cvterm_id);
-
-
---
--- Name: detector_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY detector
-    ADD CONSTRAINT detector_pkey PRIMARY KEY (detector_id);
 
 
 --
@@ -603,26 +538,6 @@ GRANT USAGE ON SEQUENCE cvterm_cvterm_id_seq TO web_usr;
 
 
 --
--- Name: detector; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE detector FROM PUBLIC;
-REVOKE ALL ON TABLE detector FROM postgres;
-GRANT ALL ON TABLE detector TO postgres;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE detector TO web_usr;
-
-
---
--- Name: detector_detector_id_seq; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON SEQUENCE detector_detector_id_seq FROM PUBLIC;
-REVOKE ALL ON SEQUENCE detector_detector_id_seq FROM postgres;
-GRANT ALL ON SEQUENCE detector_detector_id_seq TO postgres;
-GRANT USAGE ON SEQUENCE detector_detector_id_seq TO web_usr;
-
-
---
 -- Name: file; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -680,6 +595,16 @@ REVOKE ALL ON SEQUENCE measurement_measurement_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE measurement_measurement_id_seq FROM postgres;
 GRANT ALL ON SEQUENCE measurement_measurement_id_seq TO postgres;
 GRANT USAGE ON SEQUENCE measurement_measurement_id_seq TO web_usr;
+
+
+--
+-- Name: sensor; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE sensor FROM PUBLIC;
+REVOKE ALL ON TABLE sensor FROM postgres;
+GRANT ALL ON TABLE sensor TO postgres;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE sensor TO web_usr;
 
 
 --
