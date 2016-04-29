@@ -43,15 +43,15 @@ sub get_types {
 
 	my $q;
 	if (@sensor_ids) {
-  	$q = "SELECT cvterm.name FROM measurement LEFT JOIN cvterm ON (measurement.type_id =cvterm.cvterm_id) WHERE measurement.sensor_id IN (@{[join',', ('?') x @sensor_ids]}) GROUP BY 1 ORDER BY 1";
+  	$q = "SELECT cvterm.name, cvterm.description FROM measurement LEFT JOIN cvterm ON (measurement.type_id =cvterm.cvterm_id) WHERE measurement.sensor_id IN (@{[join',', ('?') x @sensor_ids]}) GROUP BY 1,2 ORDER BY 1,2";
 	}
 
 	my $h = $self->schema()->storage()->dbh()->prepare($q);
   $h->execute(@sensor_ids);
 
-  while (my $type = $h->fetchrow_array()) {
-    print STDERR "Type: " . $type . "\n";
-    push @types, $type;
+  while (my ($type_name, $description) = $h->fetchrow_array()) {
+    print STDERR "Typename: $type_name and description $description\n";
+    push @types, [$type_name, $description];
   }
   return {
     types => \@types,

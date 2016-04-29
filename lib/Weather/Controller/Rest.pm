@@ -26,7 +26,7 @@ sub weather_data : Path('/rest/weather') Args(0) {
     my $start_date = $c->req->param('start_date');
     my $end_date = $c->req->param('end_date');
     my $interval = $c->req->param('interval');
-    my $restrict = $c->req->param('restrict');
+    #my $restrict = $c->req->param('restrict');
     my @types = $c->req->param('types[]');
 
     my $wd = Weather::Data->new(
@@ -37,7 +37,7 @@ sub weather_data : Path('/rest/weather') Args(0) {
 	    start_date => $start_date,
 	    end_date => $end_date,
 	    interval => $interval,
-      restrict => $restrict
+      #restrict => $restrict
 	});
 
     $c->stash->{rest} = $wd->get_data();

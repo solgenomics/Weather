@@ -46,16 +46,18 @@ sub get_data {
     print STDERR "Processing weather data: ". join ", ", ($self->start_date(), $self->end_date(), $self->location(), $self->types())."\n";
 
 		my $interval = $self->interval();
-		my $restrict = $self->restrict();
+		#my $restrict = $self->restrict();
 		print STDERR "Interval = $interval \n";
-		print STDERR "Restrict = $restrict \n";
+		#print STDERR "Restrict = $restrict \n";
 		my $type_ref = $self->types();
 		my @types = @$type_ref;
+		my $start_date = $self->start_date();
+		my $end_date = $self->end_date();
 		print STDERR "Types = @types \n";
 		my @sensor_ids = get_sensor_ids($self);
 
-		my (@day_stats, @stats, $values, $day_filter);
-
+		my (@day_stats, @stats, $values, $metadata, $day_filter);
+=for comment
 		if ($restrict eq 'day' || $restrict eq 'night') {
 			my $day_stats_query =
 				"SELECT date_trunc('day', time) AS day, min(time) AS sunrise, max(time) AS sunset, (max(time) - min(time)) AS daylength
@@ -71,12 +73,12 @@ sub get_data {
 			print STDERR "INTENSITY_ID = $intensity_id\n";
 
 			my $h = $self->schema()->storage()->dbh()->prepare($day_stats_query);
-			$h->execute($self->start_date, $self->end_date, $intensity_id, @sensor_ids);
+			$h->execute($start_date, $end_date, $intensity_id, @sensor_ids);
 
 			my (@day_ranges, $start);
 			my $counter = 0;
 			while (my ($day, $sunrise, $sunset, $daylength) = $h->fetchrow_array()) {
-				push @day_stats, [$day, $sunrise, $sunset, $daylength];
+			#	push @day_stats, [$day, $sunrise, $sunset, $daylength];
 				if ($restrict eq 'day') {
 					push @day_ranges, "(time >= '".$sunrise."' AND time <= '".$sunset."')";
 				}
@@ -91,15 +93,16 @@ sub get_data {
 			$day_filter = "(". join('OR', @day_ranges) . ")";
 			print STDERR "day filter = $day_filter \n";
 		}
-		else {
-			 $day_filter = " time > '".$self->start_date."' AND time <= '".$self->end_date."' ";
-		}
+		else { #if restrict is undefined and user wants all measurements
+=cut
+			 $day_filter = " time > '".$start_date."' AND time <= '".$end_date."' ";
+		#}
 
 
 		my $interval_selects = {
-			minutes => "time,",
-			hours => "date_trunc('hour', time) AS time,",
-			days => "date_trunc('day', time) AS time,"
+			Raw => "time,",
+			Hourly => "date_trunc('hour', time) AS time,",
+			Daily => "date_trunc('day', time) AS time,"
 		};
 
 		my $value_selects = {
@@ -130,28 +133,29 @@ sub get_data {
 				return { error => "The type $type is not recognized\n" };
 			}
 			my $type_id = $type_row->cvterm_id();
-			print STDERR "TYPE_ID = $type_id\n";
+			my $unit = $type_row->unit();
+			my $description = $type_row->description();
+			my @cv_fields;
+			push @cv_fields, { unit => $unit, description => $description, interval => $interval, location => $self->location(), start_date => $start_date, end_date => $end_date };
+			$metadata -> {$type} = { unit => $unit, description => $description, interval => $interval, location => $self->location(), start_date => $start_date, end_date => $end_date };
 
-			#my $q = "SELECT " . $interval_selects->{$interval} . $value_selects->{$type} . " FROM measurement WHERE time > ? AND time <= ? AND type_id=? AND sensor_id IN (?) GROUP BY 1 ORDER BY 1";
 			my $q = "SELECT " . $interval_selects->{$interval} . $value_selects->{$type} . " FROM measurement WHERE $day_filter AND type_id=? AND sensor_id IN (@{[join',', ('?') x @sensor_ids]}) GROUP BY 1 ORDER BY 1";
 			print STDERR "Query for $type: $q\n";
 
 			my $h = $self->schema()->storage()->dbh()->prepare($q);
-    	#$h->execute($self->start_date, $self->end_date, $type_id, $sensor_ids_str);
 			$h->execute($type_id, @sensor_ids);
 
 			my @measurements;
 			while (my ($time, $value) = $h->fetchrow_array()) {
 				push @measurements, { date => $time, value => $value };
     	}
-			print STDERR "Measurements for $type: ".Dumper(\@measurements);
+			#print STDERR "Measurements for $type: ".Dumper(\@measurements);
 
 			my $summary_q = "SELECT to_char(min(value), $sigfig_selects->{$type}), to_char(max(value), $sigfig_selects->{$type}), to_char(avg(value), $sigfig_selects->{$type}), to_char(stddev(value), $sigfig_selects->{$type}), to_char(sum(value), $sigfig_selects->{$type}) FROM (" . $q . ") base_query";
 
 			print STDERR "Summary query= $summary_q";
 
 			$h = $self->schema()->storage()->dbh()->prepare($summary_q);
-    	#$h->execute($self->start_date, $self->end_date, $type_id, $sensor_ids_str);
 			$h->execute($type_id, @sensor_ids);
 			my ($min, $max, $average, $std_dev, $total) = $h->fetchrow_array();
 			print STDERR "average for $type = $average \n";
@@ -160,10 +164,14 @@ sub get_data {
 			$values -> {$type} = \@measurements;
 		}
 
+		print STDERR "STATS = ".Dumper(@stats)."\n";
+		print STDERR "METADATA= ".Dumper($metadata)."\n";
+
 		return {
-			day_stats => \@day_stats,
+		#	day_stats => \@day_stats,
 			stats => \@stats,
-			values => $values
+			values => $values,
+			metadata => $metadata
     };
 
 }

@@ -9,41 +9,39 @@ function initialize_events() {
      var end_date = jQuery('#daterange').data('daterangepicker').endDate.format('YYYY-MM-DD');
      var types = jQuery('#types').val() || [];
      var interval = jQuery('#interval label.active input').val()
-     var restrict = jQuery('#restrict label.active input').val()
+    // var restrict = jQuery('#restrict label.active input').val()
 
-     var type_data = {
-       temp: ['Temperature', '°C','Temperature measurements in °C, as gathered by HOBO weather station', '#8C001A'],
-       i_temp: ['Temperature from Intensity Sensor', '°C','Temperature measurements in °C, as gathered by HOBO weather station', '#8C001A'],
-       r_temp: ['Temperature from Rain Sensor', '°C','Temperature measurements in °C, as gathered by HOBO weather station', '#8C001A'],
-       intensity: ['Intensity', 'LUX','Intensity measurements in LUX, as gathered by HOBO weather station', '#ffd300'],
-       dp: ['Dew Point', '°C', 'Dew Point measurements in °C, as gathered by HOBO weather station', '#5cb85c'],
-       rh: ['Relative Humidity', '%', 'Percent Relative Humidity measurements, as gathered by HOBO weather station', '#5bc0de'],
-       rain: ['Precipitation', 'mm','Precipitation totals in mm, as gathered by HOBO weather station', '#428bca'],
-       day_length: ['Daylength', 'min','Daylength in min, as calculated from intensity data gathered by HOBO weather station', '#428bca']
+     var type_color = {
+       temp: '#8C001A', //red
+       day_length: '#FF9100', //orange
+       intensity: '#ffd300', //yellow
+       dp: '#5cb85c', //green
+       rh: '#5bc0de', //light blue
+       rain: '#428bca' //darker blue
      };
 
      jQuery('#graphs_body').html("");
      var numTypes = types.length;
      for (var i = 0; i < numTypes; i++) {
-       console.log("type number i ="+types[i]);
+       console.log("type number "+i+"="+types[i]);
        jQuery('#graphs_body').append("<div id="+types[i]+"></div>");
      }
 
-     var data = get_data(location, start_date, end_date, interval, restrict, type_data, types);
+     var data = get_data(location, start_date, end_date, interval, type_color, types);
    });
 }
 
-function get_data(location, start_date, end_date, interval, restrict, type_data, types) {
+function get_data(location, start_date, end_date, interval, type_color, types) {
   jQuery.ajax( {
     url: '/rest/weather',
-    data: { 'location' : location, 'start_date' : start_date, 'end_date' : end_date, 'interval' : interval, 'restrict': restrict, 'types' : types },
+    data: { 'location' : location, 'start_date' : start_date, 'end_date' : end_date, 'interval' : interval, 'types' : types },
     success: function(response) {
 	    if (response.error) {
         alert(response.error);
 	    }
 	    else {
         display_summary_statistics(response.stats);
-        display_timeseries(response.values, type_data);
+        display_timeseries(response.values, response.metadata, type_color);
 	    }
     },
     error: function(response) {
@@ -109,21 +107,24 @@ function display_summary_statistics(data) {
   */
   //table.buttons().container().appendTo( jQuery('#example_wrapper .col-sm-6:eq(0)' ) );
 
-function display_timeseries(data, type_data) {
-  //for ( var i = 0; i < data.length; i++) {
-    //  var measurements = data[i];
+function display_timeseries(data, metadata, type_color) {
   for (var type in data) {
     if (data.hasOwnProperty(type)) {
     //console.log("current type ="+type);
-    var type_string = type_data[type];
+    var type_hash = metadata[type];
+    //console.log("type_hash="+JSON.stringify(type_hash));
+    var averages = " averages in ";
+    if (type_hash['interval'] == 'Raw') { averages = " measurements in ";}
+    var description = type_hash['interval']+' '+type_hash['description']+averages+type_hash['unit']+', gathered by HOBO weather station at '+type_hash['location']+' betweeen '+type_hash['start_date']+' and '+type_hash['end_date']+'.';
+    console.log("description: "+description);
     var converted_data = MG.convert.date(data[type], 'date', "%Y-%m-%d %H:%M:%S");
     MG.data_graphic({
-      title: type_string[0],
+      title: type_hash['description'],
   //    y_label: type_string[1],
-      yax_units: type_string[1],
+      yax_units: type_hash['unit'],
       y_scale_type: 'linear',
-      description: type_string[2],
-      color: type_string[3],
+      description: description,
+      color: type_color[type],
       data: converted_data,
       linked: true,
       full_width: true,
@@ -141,7 +142,7 @@ function create_location_select_box() {
 	url: '/rest/locations',
 	success: function(response) {
       console.log("locations= "+response);
-      var select_html = '<p>Select a location:</p><select class="form-control input-sm" id="location_select"><option></option><option>' + response.join('</option><option>') + '</option></select>';
+      var select_html = '<p>Select a location:</p><select class="form-control input-sm" id="location_select" autofocus="autofocus"><option></option><option>' + response.join('</option><option>') + '</option></select>';
       jQuery('#location_select_div').html(select_html);
 
       jQuery('#location_select').change(
@@ -158,10 +159,14 @@ function create_location_select_box() {
 }
 
 function create_radio_button_options() {
-  var interval_html = '<p>Select measurement type:</p><div class = "btn-group" data-toggle = "buttons" id="interval"><label class = "btn btn-default active"><input type = "radio" name ="interval_options" id = "minutes" value="minutes">Raw values</label><label class = "btn btn-default"><input type = "radio" name = "options" id = "option2" value="hours"> Hourly averages</label><label class = "btn btn-default"><input type = "radio" name = "options" id = "option3" value="days"> Daily averages</label></div>'
+  var interval_html = '<center><p>Select measurement type:</p><div class = "btn-group" data-toggle = "buttons" id="interval"><label class = "btn btn-default active"><input type = "radio" name = "options" id = "option1" value="Daily"> Daily averages</label><label class = "btn btn-default"><input type = "radio" name = "options" id = "option2" value="Hourly"> Hourly averages</label><label class = "btn btn-default"><input type = "radio" name ="interval_options" id = "option3" value="Raw">Raw values</label></div></center>'
   jQuery('#interval_select_div').html(interval_html);
-  var time_html = '<p>Restrict by time of day:</p><div class = "btn-group" data-toggle = "buttons" id="restrict"><label class = "btn btn-default active"><input type = "radio" name ="time_options" id = "both" value="both"> All measurements</label><label class = "btn btn-default"><input type = "radio" name = "time_options" id = "night" value="night"> Night only</label><label class = "btn btn-default"><input type = "radio" name = "time_options" id = "day" value="day"> Day only</label></div>'
-  jQuery('#time_select_div').html(time_html);
+  var type_html ='<p>Select data types:</p><select multiple="" class="form-control disabled" id="types" name="1" style="min-width: 200px;overflow:auto;"></select><br><button class="btn btn-default btn-sm disabled" id="select_all" >Select All</button>';
+  jQuery('#type_select_div').html(type_html);
+  var daterange_html = '<p>Select a date range (defaults to latest month available for the selected options):</p><input class="form-control input-sm disabled" type="text" id="daterange" name="daterange"/>';
+  jQuery('#daterange_select_div').html(daterange_html);
+//  var time_html = '<p>Restrict by time of day:</p><div class = "btn-group" data-toggle = "buttons" id="restrict"><label class = "btn btn-default active"><input type = "radio" name ="time_options" id = "both" value="both"> All measurements</label><label class = "btn btn-default"><input type = "radio" name = "time_options" id = "night" value="night"> Night only</label><label class = "btn btn-default"><input type = "radio" name = "time_options" id = "day" value="day"> Day only</label></div>'
+//  jQuery('#time_select_div').html(time_html);
 }
 
 function create_type_multiple_select(location) {
@@ -169,13 +174,22 @@ function create_type_multiple_select(location) {
 	url: '/rest/types',
   data: {'location': location},
   success: function(response) {
-      var type_html ='<p>Select data types:</p><select multiple="" class="form-control" id="types" name="1" size="5" style="min-width: 200px;overflow:auto;"><option>' + response.types.join('</option><option>') + '</option></select><br><button class="btn btn-default btn-sm pull-right" id="select_all" >Select All</button>';
-      jQuery('#type_select_div').html(type_html);
+      jQuery('#types').html("");
+      var typesLength = response.types.length;
+      jQuery('#select_all').removeClass('disabled');
+      jQuery('#types').attr("size", typesLength);
+      var type_html;
+      for ( var i=0; i < typesLength; i++) {
+        type_html += '<option value="'+response.types[i][0]+'">'+response.types[i][1]+'</option>';
+      }
+      //var type_html ='<option>' + response.types[1].join('</option><option>') + '</option>';
+      jQuery('#types').append(type_html);
       jQuery('#select_all').click( function() {
           select_all_options(document.getElementById('types'));
       });
       jQuery('#types').change(
         function() {
+          jQuery('#submit').removeClass('disabled');
           var location = jQuery('#location_select').val();
           var types = jQuery(this).val();
           create_daterangepicker(location,types);
@@ -209,7 +223,7 @@ function create_daterangepicker(location,types) {
           "endDate": response.latest_date,
           "minDate": response.earliest_date,
           "maxDate": response.latest_date,
-          "opens": "right"
+          "opens": "left"
         },
         function(start, end) {
           startDate = start.format('YYYY-MM-DD');
