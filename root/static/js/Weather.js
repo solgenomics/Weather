@@ -66,6 +66,7 @@ function display_summary_statistics(data) {
     destroy: true,
     columns: [
       { title: "Measurement Type" },
+      { title: "Unit" },
       { title: "Minimum" },
       { title: "Maximum" },
       { title: "Average" },
@@ -175,6 +176,8 @@ function create_type_multiple_select(location) {
   data: {'location': location},
   success: function(response) {
       jQuery('#types').html("");
+      jQuery('#select_all').removeClass('disabled')
+      //jQuery('location_select').removeAttr( "autofocus", null );
       var typesLength = response.types.length;
       jQuery('#select_all').removeClass('disabled');
       jQuery('#types').attr("size", typesLength);
