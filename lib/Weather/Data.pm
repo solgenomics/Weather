@@ -160,7 +160,7 @@ sub get_data {
 			my ($min, $max, $average, $std_dev, $total) = $h->fetchrow_array();
 			print STDERR "average for $type = $average \n";
 
-			push @stats, [ $type, $min, $max, $average, $std_dev, $total];
+			push @stats, [ $description, $min, $max, $average, $std_dev, $total];
 			$values -> {$type} = \@measurements;
 		}
 
