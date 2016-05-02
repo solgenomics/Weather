@@ -57,6 +57,7 @@ sub get_data {
 		my @sensor_ids = get_sensor_ids($self);
 
 		my (@day_stats, @stats, $values, $metadata, $day_filter);
+		
 =for comment
 		if ($restrict eq 'day' || $restrict eq 'night') {
 			my $day_stats_query =

@@ -1,7 +1,76 @@
 
-</td></tr>
-<tr><td>
-<hr>
-<center>The RTB Weather Database is hosted at the <a href="http://bti.cornell.edu">BTI</a></center>.
-</td></tr>
-</table>
+<div id="wrapper" class="container-fluid">
+  <div class="row">
+    <div class="col-xs-1 col-sm-1 col-md-1 col-lg-2"></div>
+    <div id="footer" class="col-xs-10 col-sm-10 col-md-10 col-lg-8">
+
+      <table class="center table hidden-xs" style="margin-bottom:-4px;">
+	    	<tbody>
+          <tr>
+          <!--
+            <td align="center" width="25%">
+              <p><i>Part of</i></p>
+              <a href="http://www.nextgencassava.org/" class="footer"><img width="80" alt="NEXTGEN Cassava Project" src="/static/img/nextgen_cassava_logo.png" title="NEXTGEN Cassava" border="0"/></a>
+            </td>
+          -->
+            <td align="center" width="25%">
+              <span class="glyphicon glyphicon-cog" aria-hidden="true"></span><i> Built with</i>
+                <br><br>
+                <a href="http://www.postgresql.org/">PostgreSQL</a><br>
+                <a href="http://www.catalystframework.org/">Catalyst</a><br>
+                <a href="https://jquery.com/">jQuery</a><br>
+                <a href="http://getbootstrap.com/">Bootstrap</a><br>
+                <a href="https://www.datatables.net/">DataTables</a><br>
+                <a href="http://metricsgraphicsjs.org/">MetricsGraphics.js</a><br>
+                <a href="https://github.com/">GitHub</a><br>
+              </p>
+            </td>
+            <td align="center" width="25%">
+              <span class="glyphicon glyphicon-home" aria-hidden="true"></span><i> Hosted by</i>
+              <br><br>
+              <a href="http://bti.cornell.edu/" class="footer"><img width="200" alt="Boyce Thompson Institute" src="/static/img/bti_logo_2016.png" title="Boyce Thompson Institute" border="0" style="padding-bottom:2px"/></a>
+            </td>
+
+            <td align="center" width="25%">
+              <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span><i> Funding from</i>
+              <br><br>
+              <a href="http://www.dfid.gov.uk/" class="footer"><img width="80" alt="UK Aid" src="/static/img/uk_aid.png" title="UK Aid" border="0"/></a>
+              <br>
+              <a href="http://www.gatesfoundation.org/" class="footer"><img width="160" alt="Bill and Melinda Gates Foundation" src="/static/img/gates-foundation-bw.jpg" title="Gates Foundation" border="0" style="padding-top:15px"/></a>
+            </td>
+
+          </tr>
+	    	</tbody>
+      </table>
+
+      <ul class="visible-xs-block list-inline center nav-justified">
+    <!--
+        <li>
+          <p> Weather Database is a part of:</p>
+          <a href="http://www.nextgencassava.org/" class="footer"><img width="80" alt="NEXTGEN Cassava Project" src="/static/img/nextgen_cassava_logo.png" title="NEXTGEN Cassava" border="0"/></a>
+        </li>
+    -->
+        <li>
+          <span class="glyphicon glyphicon-cog" aria-hidden="true"></span><i> Built with</i>
+            <center><a href="http://www.postgresql.org/">PostgreSQL</a><br>
+            <center><a href="http://www.catalystframework.org/">Catalyst</a><br>
+            <center><a href="https://jquery.com/">jQuery</a><br>
+            <center><a href="http://getbootstrap.com/">Bootstrap</a><br>
+            <center><a href="https://www.datatables.net/">DataTables</a><br>
+            <center><a href="http://metricsgraphicsjs.org/">MetricsGraphics.js</a><br>
+            <center><a href="https://github.com/">GitHub</a><br>
+          </p>
+        <li>
+          <span class="glyphicon glyphicon-home" aria-hidden="true"></span><i> Hosted by</i>
+          <a href="http://bti.cornell.edu/" class="footer"><img width="240" alt="Boyce Thompson Institute" src="/static/img/bti_logo_2016.png" title="Boyce Thompson Institute" border="0" style="padding-bottom:2px"/></a>
+        <li>
+          <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span><i> Funding from</i>
+          <a href="http://www.dfid.gov.uk/" class="footer"><img width="80" alt="UK Aid" src="/static/img/uk_aid.png" title="UK Aid" border="0" style="padding-top:15px"/></a>
+          <br>
+          <a href="http://www.gatesfoundation.org/" class="footer"><img width="160" alt="Bill and Melinda Gates Foundation" src="/static/img/gates-foundation-bw.jpg" title="Gates Foundation" border="0" style="padding-top:15px"/></a>
+        </li>
+      </ul>
+    </div>
+    <div class="col-xs-1 col-sm-1 col-md-1 col-lg-2"></div>
+  </div>
+</div>
