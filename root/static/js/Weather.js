@@ -32,19 +32,33 @@ function initialize_events() {
 }
 
 function get_data(location, start_date, end_date, interval, type_color, types) {
+  var spinner;
   jQuery.ajax( {
     url: '/rest/weather',
     data: { 'location' : location, 'start_date' : start_date, 'end_date' : end_date, 'interval' : interval, 'types' : types },
+    beforeSend: function() {
+      var target = document.getElementById('spinning_wheel');
+      console.log('target = '+target);
+      spinner = new Spinner({color:'#ADD8E6', lines: 12}).spin(target);
+      //jQuery('#working_msg').html('<h4> Testing the msg part of the working modal </h4>');
+      jQuery('#working_modal').modal("show");
+    },
     success: function(response) {
 	    if (response.error) {
+        spinner.stop();
+        jQuery('#working_modal').modal("hide");
         alert(response.error);
 	    }
 	    else {
         display_summary_statistics(response.stats);
         display_timeseries(response.values, response.metadata, type_color);
+        spinner.stop();
+        jQuery('#working_modal').modal("hide");
 	    }
     },
     error: function(response) {
+      spinner.stop();
+      jQuery('#working_modal').modal("hide");
 	    alert('error');
     }
   });
