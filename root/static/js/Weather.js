@@ -79,13 +79,20 @@ function display_summary_statistics(data) {
     data: data,
     destroy: true,
     columns: [
-      { title: "Measurement Type" },
+      { title: "Data Type" },
       { title: "Unit" },
       { title: "Minimum" },
       { title: "Maximum" },
       { title: "Average" },
       { title: "Std Deviation" },
-      { title: "Total Sum" }
+      { title: "Total Sum" },
+      { title: "Location" },
+      { title: "Start Date" },
+      { title: "End Date" },
+      { title: "Measurement Interval" }
+    ],
+    columnDefs: [
+      { visible: false, targets: [7,8,9,10] }
     ]
   });
 }

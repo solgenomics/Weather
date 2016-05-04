@@ -57,7 +57,7 @@ sub get_data {
 		my @sensor_ids = get_sensor_ids($self);
 
 		my (@day_stats, @stats, $values, $metadata, $day_filter);
-		
+
 =for comment
 		if ($restrict eq 'day' || $restrict eq 'night') {
 			my $day_stats_query =
@@ -161,7 +161,7 @@ sub get_data {
 			my ($min, $max, $average, $std_dev, $total) = $h->fetchrow_array();
 			print STDERR "average for $type = $average \n";
 
-			push @stats, [ $description, $unit, $min, $max, $average, $std_dev, $total];
+			push @stats, [ $description, $unit, $min, $max, $average, $std_dev, $total, $self->location(), $start_date, $end_date, $interval ];
 			$values -> {$type} = \@measurements;
 		}
 
