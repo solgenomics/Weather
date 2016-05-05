@@ -1,5 +1,18 @@
 function initialize_events() {
 
+  jQuery(document)
+    .on('click', '.panel-heading span.clickable', function(e){
+        jQuery(this).parents('.panel').find('.panel-collapse').collapse('toggle');
+    })
+    .on('show.bs.collapse', '.panel-collapse', function () {
+        var $span = jQuery(this).parents('.panel').find('.panel-heading span.clickable');
+        $span.find('i').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+    })
+    .on('hide.bs.collapse', '.panel-collapse', function () {
+        var $span = jQuery(this).parents('.panel').find('.panel-heading span.clickable');
+        $span.find('i').removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+    })
+
   create_location_select_box();
   create_radio_button_options();
 
@@ -24,7 +37,7 @@ function initialize_events() {
      jQuery('#graphs_body').html("");
      var numTypes = types.length;
      for (var i = 0; i < numTypes; i++) {
-       console.log("type number "+i+"="+types[i]);
+       //console.log("type number "+i+"="+types[i]);
        jQuery('#graphs_body').append("<div id="+types[i]+"></div>");
      }
 
@@ -39,7 +52,7 @@ function get_data(location, start_date, end_date, interval, type_color, types) {
     data: { 'location' : location, 'start_date' : start_date, 'end_date' : end_date, 'interval' : interval, 'types' : types },
     beforeSend: function() {
       var target = document.getElementById('spinning_wheel');
-      console.log('target = '+target);
+      //console.log('target = '+target);
       spinner = new Spinner({color:'#ADD8E6', lines: 12}).spin(target);
       //jQuery('#working_msg').html('<h4> Testing the msg part of the working modal </h4>');
       jQuery('#working_modal').modal("show");
@@ -56,7 +69,7 @@ function get_data(location, start_date, end_date, interval, type_color, types) {
         jQuery('a[data-toggle="tab"]').on( 'shown.bs.tab', function (e) {
           $.fn.dataTable.tables( {visible: true, api: true} ).columns.adjust();
         } );
-        console.log(JSON.stringify(response.values));
+        //console.log(JSON.stringify(response.values));
         display_timeseries(response.values, response.metadata, type_color);
         spinner.stop();
         jQuery('#working_modal').modal("hide");
@@ -105,6 +118,8 @@ function display_tables(summary_data, raw_data, values, metadata, location, star
     buttons: ['copy', 'excel', 'csv', 'print' ],
     data: summary_data,
     destroy: true,
+    paging: true,
+    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
     columns: [
       { title: "Data Type" },
       { title: "Unit" },
@@ -126,7 +141,9 @@ function display_tables(summary_data, raw_data, values, metadata, location, star
     dom: 'Bfrtip',
     buttons: ['copy', 'excel', 'csv', 'print' ],
     data: raw_data,
-    destroy: true
+    destroy: true,
+    paging: true,
+    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]]
   });
 }
 
@@ -160,7 +177,7 @@ function create_location_select_box() {
   jQuery.ajax( {
 	url: '/rest/locations',
 	success: function(response) {
-      console.log("locations= "+response);
+      //console.log("locations= "+response);
       var select_html = '<p>Select a location:</p><select class="form-control input-sm" id="location_select" autofocus="autofocus"><option></option><option>' + response.join('</option><option>') + '</option></select>';
       jQuery('#location_select_div').html(select_html);
 

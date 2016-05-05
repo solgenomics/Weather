@@ -101,26 +101,22 @@ sub get_data {
 
 
 		my $interval_selects = {
-			individual => "time,",
-			hourly => "date_trunc('hour', time) AS time,",
-			daily => "date_trunc('day', time) AS time,"
+			individual => "time",
+			hourly => "date_trunc('hour', time) AS time",
+			daily => "date_trunc('day', time) AS time"
 		};
 
 		my $value_selects = {
-			temp => " avg(value) as value",
-			i_temp => " avg(value) as value",
-			r_temp => " avg(value) as value",
-			intensity => " avg(value) as value",
-			dp => " avg(value) as value",
-			rh => " avg(value) as value",
-			rain => " sum(value) as value",
-			day_length => " avg(value) as value"
+			temp => "avg(value)",
+			intensity => "avg(value)",
+			dp => "avg(value)",
+			rh => "avg(value)",
+			rain => "sum(value)",
+			day_length => "avg(value)"
 		};
 
 		my $sigfig_selects = {
 			temp => "'FM999999999.000'",
-			i_temp => "'FM999999999.000'",
-			r_temp => "'FM999999999.000'",
 			intensity => "'FM999999999'",
 			dp => "'FM999999999.000'",
 			rh => "'FM999999999.000'",
@@ -140,7 +136,10 @@ sub get_data {
 			push @cv_fields, { unit => $unit, description => $description, interval => $interval, location => $self->location(), start_date => $start_date, end_date => $end_date };
 			$metadata -> {$type} = { unit => $unit, description => $description, interval => $interval, location => $self->location(), start_date => $start_date, end_date => $end_date };
 
-			my $q = "SELECT " . $interval_selects->{$interval} . $value_selects->{$type} . " FROM measurement WHERE $day_filter AND type_id=? AND sensor_id IN (@{[join',', ('?') x @sensor_ids]}) GROUP BY 1 ORDER BY 1";
+			my $normal_select = "SELECT $interval_selects->{$interval}, $value_selects->{$type} as value ";
+			my $trunc_value_select = "SELECT $interval_selects->{$interval}, to_char($value_selects->{$type}, $sigfig_selects->{$type}) as value ";
+			my $from = "FROM measurement WHERE $day_filter AND type_id=? AND sensor_id IN (@{[join',', ('?') x @sensor_ids]}) GROUP BY 1 ORDER BY 1";
+			my $q = $trunc_value_select . $from;
 			print STDERR "Query for $type: $q\n";
 
 			my $h = $self->schema()->storage()->dbh()->prepare($q);
@@ -152,7 +151,7 @@ sub get_data {
 				%raw_hash -> {$type} -> {$time} = $value;
     	}
 
-			my $summary_q = "SELECT to_char(min(value), $sigfig_selects->{$type}), to_char(max(value), $sigfig_selects->{$type}), to_char(avg(value), $sigfig_selects->{$type}), to_char(stddev(value), $sigfig_selects->{$type}), to_char(sum(value), $sigfig_selects->{$type}) FROM (" . $q . ") base_query";
+			my $summary_q = "SELECT to_char(min(value), $sigfig_selects->{$type}), to_char(max(value), $sigfig_selects->{$type}), to_char(avg(value), $sigfig_selects->{$type}), to_char(stddev(value), $sigfig_selects->{$type}), to_char(sum(value), $sigfig_selects->{$type}) FROM (" . $normal_select . $from . ") base_query";
 
 			print STDERR "Summary query= $summary_q";
 
@@ -167,7 +166,7 @@ sub get_data {
 		}
 
 		my @raw_data;
-		my $first_hash_ref = $raw_hash{$types[0]};
+		my $first_hash_ref = $raw_hash{$types[2]};
 		my %first_hash = %$first_hash_ref;
 		my @times = sort keys %first_hash;
 
