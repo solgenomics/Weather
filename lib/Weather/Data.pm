@@ -56,7 +56,7 @@ sub get_data {
 		print STDERR "Types = @types \n";
 		my @sensor_ids = get_sensor_ids($self);
 
-		my (@day_stats, @stats, $values, $metadata, $day_filter);
+		my (@day_stats, @stats, $values, $metadata, $day_filter, %raw_hash);
 
 =for comment
 		if ($restrict eq 'day' || $restrict eq 'night') {
@@ -101,9 +101,9 @@ sub get_data {
 
 
 		my $interval_selects = {
-			Raw => "time,",
-			Hourly => "date_trunc('hour', time) AS time,",
-			Daily => "date_trunc('day', time) AS time,"
+			individual => "time,",
+			hourly => "date_trunc('hour', time) AS time,",
+			daily => "date_trunc('day', time) AS time,"
 		};
 
 		my $value_selects = {
@@ -149,8 +149,8 @@ sub get_data {
 			my @measurements;
 			while (my ($time, $value) = $h->fetchrow_array()) {
 				push @measurements, { date => $time, value => $value };
+				%raw_hash -> {$type} -> {$time} = $value;
     	}
-			#print STDERR "Measurements for $type: ".Dumper(\@measurements);
 
 			my $summary_q = "SELECT to_char(min(value), $sigfig_selects->{$type}), to_char(max(value), $sigfig_selects->{$type}), to_char(avg(value), $sigfig_selects->{$type}), to_char(stddev(value), $sigfig_selects->{$type}), to_char(sum(value), $sigfig_selects->{$type}) FROM (" . $q . ") base_query";
 
@@ -163,14 +163,36 @@ sub get_data {
 
 			push @stats, [ $description, $unit, $min, $max, $average, $std_dev, $total, $self->location(), $start_date, $end_date, $interval ];
 			$values -> {$type} = \@measurements;
+			%raw_hash -> {$type} -> {$type} = $description;
+		}
+
+		my @raw_data;
+		my $first_hash_ref = $raw_hash{$types[0]};
+		my %first_hash = %$first_hash_ref;
+		my @times = sort keys %first_hash;
+
+		foreach my $time (@times) {
+			my @array;
+			unless ($time =~ m/(\d+)/) { next;}
+			my @value_strings = map { $raw_hash{$_}-> {$_} => $raw_hash{$_}->{$time} } @types;
+			my %values_hash = %{{@value_strings}};
+			push @array, $time;
+			foreach my $key (sort (keys (%values_hash))) {
+				push @array, $values_hash{$key};
+			}
+			print STDERR "array = @array \n";
+			my $array_string = [join (',', @array)];
+			push @raw_data, [ @array ];
 		}
 
 		print STDERR "STATS = ".Dumper(@stats)."\n";
+		print STDERR "RAW DATA = ".Dumper(@raw_data)."\n";
+		print STDERR "VALUES = ".Dumper($values)."\n";
 		print STDERR "METADATA= ".Dumper($metadata)."\n";
 
 		return {
-		#	day_stats => \@day_stats,
 			stats => \@stats,
+			raw_data => \@raw_data,
 			values => $values,
 			metadata => $metadata
     };

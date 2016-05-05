@@ -7,6 +7,7 @@ function initialize_events() {
      var location = jQuery('#location_select').val();
      var start_date = jQuery('#daterange').data('daterangepicker').startDate.format('YYYY-MM-DD');
      var end_date = jQuery('#daterange').data('daterangepicker').endDate.format('YYYY-MM-DD');
+     //var cap_types = jQuery('#types').val() || [];
      var types = jQuery('#types').val() || [];
      var interval = jQuery('#interval label.active input').val()
     // var restrict = jQuery('#restrict label.active input').val()
@@ -50,7 +51,12 @@ function get_data(location, start_date, end_date, interval, type_color, types) {
         alert(response.error);
 	    }
 	    else {
-        display_summary_statistics(response.stats);
+        //console.log(JSON.stringify(response.raw_data));
+        display_tables(response.stats, response.raw_data, response.values, response.metadata, location, start_date, end_date, interval);
+        jQuery('a[data-toggle="tab"]').on( 'shown.bs.tab', function (e) {
+          $.fn.dataTable.tables( {visible: true, api: true} ).columns.adjust();
+        } );
+        console.log(JSON.stringify(response.values));
         display_timeseries(response.values, response.metadata, type_color);
         spinner.stop();
         jQuery('#working_modal').modal("hide");
@@ -72,11 +78,32 @@ function select_all_options(obj) {
     jQuery('#types').trigger('change');
 }
 
-function display_summary_statistics(data) {
-  var table = jQuery('#summary_stats').DataTable( {
+function display_tables(summary_data, raw_data, values, metadata, location, start_date, end_date, interval) {
+  jQuery('#table_panel').html('');
+  var averages = " averages";
+  if (interval == 'individual') { averages = " measurements";}
+  var table_html = '<ul class="nav nav-tabs"><li class="active"><a data-toggle="tab" href="#summary">Summary</a></li><li><a data-toggle="tab" href="#raw">Raw Data</a></li></ul><div class="tab-content">';
+  table_html += '<div id="summary" class="tab-pane fade in active"><div class="table-responsive" style="margin-top: 10px;"><table id="summary_stats" class="table table-hover table-striped table-bordered" width="100%"><caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Table description: <i>Summary of '+interval+averages+' from '+location+' between '+start_date+' and '+end_date+'.</i></center></caption></table></div></div>';
+  table_html += '<div id="raw" class="tab-pane fade"><div class="table-responsive" style="margin-top: 10px;"><table id="raw_data" class="table table-hover table-striped table-bordered" width="100%"><thead><tr>';
+  table_html += '<th>Time</th>';
+  var types= [];
+  for (var type in values) {
+    if (values.hasOwnProperty(type)) {
+      types.push(type);
+    }
+  }
+  types.sort ();
+  for (i in types) {
+    var type = types[i]
+    var type_hash = metadata[type];
+    table_html += '<th>'+type_hash['description']+'</th>';
+  }
+  table_html += '</tr></thead><caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Table description: <i>All '+interval+averages+' from '+location+' between '+start_date+' and '+end_date+'.</i></center></caption></table></div></div></div>';
+  jQuery('#table_panel').html(table_html);
+  var summary_table = jQuery('#summary_stats').DataTable( {
     dom: 'Bfrtip',
-    buttons: ['copy', 'excel', 'csv' ],
-    data: data,
+    buttons: ['copy', 'excel', 'csv', 'print' ],
+    data: summary_data,
     destroy: true,
     columns: [
       { title: "Data Type" },
@@ -95,67 +122,37 @@ function display_summary_statistics(data) {
       { visible: false, targets: [7,8,9,10] }
     ]
   });
+  var full_table = jQuery('#raw_data').DataTable( {
+    dom: 'Bfrtip',
+    buttons: ['copy', 'excel', 'csv', 'print' ],
+    data: raw_data,
+    destroy: true
+  });
 }
-
-/*  function display_raw_data(data, types) {
-    var table = jQuery('#raw_data').DataTable( {
-      dom: 'Bfrtip',
-      buttons: ['copy', 'excel', 'csv' ],
-      data: data,
-      destroy: true,
-      columns: [
-            { "data": "name[, ]" },
-            { "data": "hr.0" },
-            { "data": "office" },
-            { "data": "extn" },
-            { "data": "hr.2" },
-            { "data": "hr.1" }
-        ]
-    } );
-
- for creation of extra table of daylength stats
-
-  <div class="row">
-    <div class="panel panel-info">
-      <div class="panel-heading">Daylength Stats Table</div>
-      <div class="panel-body" style="overflow:hidden">
-        <div class="table-responsive">
-        <table id="summary_stats" class="table table-hover table-striped table-bordered" width="100%"></table>
-        </div>
-      </div>
-    </div>
-  </div>
-  <br/>
-  */
-  //table.buttons().container().appendTo( jQuery('#example_wrapper .col-sm-6:eq(0)' ) );
 
 function display_timeseries(data, metadata, type_color) {
   for (var type in data) {
     if (data.hasOwnProperty(type)) {
-    //console.log("current type ="+type);
-    var type_hash = metadata[type];
-    //console.log("type_hash="+JSON.stringify(type_hash));
-    var averages = " averages in ";
-    if (type_hash['interval'] == 'Raw') { averages = " measurements in ";}
-    var description = type_hash['interval']+' '+type_hash['description']+averages+type_hash['unit']+', gathered by HOBO weather station at '+type_hash['location']+' betweeen '+type_hash['start_date']+' and '+type_hash['end_date']+'.';
-    console.log("description: "+description);
-    var converted_data = MG.convert.date(data[type], 'date', "%Y-%m-%d %H:%M:%S");
-    MG.data_graphic({
-      title: type_hash['description'],
-  //    y_label: type_string[1],
-      yax_units: type_hash['unit'],
-      y_scale_type: 'linear',
-      description: description,
-      color: type_color[type],
-      data: converted_data,
-      linked: true,
-      full_width: true,
-      height: 300,
-      right: 40,
-      xax_count: 4,
-      target: '#' + type
-    });
-  }
+      var type_hash = metadata[type];
+      var averages = " averages in ";
+      if (type_hash['interval'] == 'individual') { averages = " measurements in ";}
+      var description = type_hash['interval'].capitalizeFirstLetter()+' '+type_hash['description'].toLowerCase()+averages+type_hash['unit']+', gathered by HOBO weather station at '+type_hash['location']+' betweeen '+type_hash['start_date']+' and '+type_hash['end_date']+'.';
+      var converted_data = MG.convert.date(data[type], 'date', "%Y-%m-%d %H:%M:%S");
+      MG.data_graphic({
+        title: type_hash['description'],
+        yax_units: type_hash['unit'],
+        y_scale_type: 'linear',
+        description: description,
+        color: type_color[type],
+        data: converted_data,
+        linked: true,
+        full_width: true,
+        height: 300,
+        right: 40,
+        xax_count: 4,
+        target: '#' + type
+      });
+    }
   }
 }
 
@@ -181,7 +178,7 @@ function create_location_select_box() {
 }
 
 function create_radio_button_options() {
-  var interval_html = '<center><p>Select measurement type:</p><div class = "btn-group" data-toggle = "buttons" id="interval"><label class = "btn btn-default active"><input type = "radio" name = "options" id = "option1" value="Daily"> Daily averages</label><label class = "btn btn-default"><input type = "radio" name = "options" id = "option2" value="Hourly"> Hourly averages</label><label class = "btn btn-default"><input type = "radio" name ="interval_options" id = "option3" value="Raw">Raw values</label></div></center>'
+  var interval_html = '<center><p>Select measurement type:</p><div class = "btn-group" data-toggle = "buttons" id="interval"><label class = "btn btn-default active"><input type = "radio" name = "options" id = "option1" value="daily"> Daily averages</label><label class = "btn btn-default"><input type = "radio" name = "options" id = "option2" value="hourly"> Hourly averages</label><label class = "btn btn-default"><input type = "radio" name ="interval_options" id = "option3" value="individual">Individual values</label></div></center>'
   jQuery('#interval_select_div').html(interval_html);
   var type_html ='<p>Select data types:</p><select multiple="" class="form-control disabled" id="types" name="1" style="min-width: 200px;overflow:auto;"></select><br><button class="btn btn-default btn-sm disabled" id="select_all" >Select All</button>';
   jQuery('#type_select_div').html(type_html);
@@ -198,7 +195,6 @@ function create_type_multiple_select(location) {
   success: function(response) {
       jQuery('#types').html("");
       jQuery('#select_all').removeClass('disabled')
-      //jQuery('location_select').removeAttr( "autofocus", null );
       var typesLength = response.types.length;
       jQuery('#select_all').removeClass('disabled');
       jQuery('#types').attr("size", typesLength);
@@ -206,7 +202,6 @@ function create_type_multiple_select(location) {
       for ( var i=0; i < typesLength; i++) {
         type_html += '<option value="'+response.types[i][0]+'">'+response.types[i][1]+'</option>';
       }
-      //var type_html ='<option>' + response.types[1].join('</option><option>') + '</option>';
       jQuery('#types').append(type_html);
       jQuery('#select_all').click( function() {
           select_all_options(document.getElementById('types'));
@@ -223,6 +218,10 @@ function create_type_multiple_select(location) {
   	    alert("An error occurred initializing type multiple select");
   	}
   });
+}
+
+String.prototype.capitalizeFirstLetter = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
 }
 
 function create_daterangepicker(location,types) {
