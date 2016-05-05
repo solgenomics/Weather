@@ -121,7 +121,7 @@ sub get_data {
 			dp => "'FM999999999.000'",
 			rh => "'FM999999999.000'",
 			rain => "'FM999999999.0'",
-			day_length => "'FM999999999'"
+			day_length => "'FM999999999.00'"
 		};
 
 		for my $type (@types) {
@@ -166,7 +166,7 @@ sub get_data {
 		}
 
 		my @raw_data;
-		my $first_hash_ref = $raw_hash{$types[2]};
+		my $first_hash_ref = $raw_hash{$types[-1]};
 		my %first_hash = %$first_hash_ref;
 		my @times = sort keys %first_hash;
 

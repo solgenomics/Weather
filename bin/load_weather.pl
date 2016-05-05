@@ -108,13 +108,13 @@ else {
 }
 
 my $temp1_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'temp', unit => '°C', description =>'Temperature'}) ->cvterm_id();
-my $temp2_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'i_temp', unit => '°C', description =>'Temperature from Intensity Sensor'}) ->cvterm_id();
-my $temp3_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'r_temp', unit => '°C', description =>'Temperature from Precipitation Sensor'}) ->cvterm_id();
+#my $temp2_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'i_temp', unit => '°C', description =>'Temperature from Intensity Sensor'}) ->cvterm_id();
+#my $temp3_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'r_temp', unit => '°C', description =>'Temperature from Precipitation Sensor'}) ->cvterm_id();
 my $rh_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'rh', unit => '%', description =>'Relative Humidity'})->cvterm_id();
 my $dp_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'dp', unit => '°C', description =>'Dew Point' } )->cvterm_id();
 my $intensity_cvterm_id = $schema->resultset("Cvterm")->find_or_create( { name => 'intensity', unit => 'LUX', description =>'Intensity' })->cvterm_id();
 my $precipitation_cvterm_id = $schema->resultset("Cvterm")->find_or_create({ name=> 'rain', unit => 'mm', description =>'Precipitation' })->cvterm_id();
-my $daylength_cvterm_id = $schema->resultset("Cvterm")->find_or_create({ name=> 'day_length', unit => 'min', description =>'Day Length' })->cvterm_id();
+my $daylength_cvterm_id = $schema->resultset("Cvterm")->find_or_create({ name=> 'day_length', unit => 'hrs', description =>'Day Length' })->cvterm_id();
 
 
 my $parser = Spreadsheet::ParseExcel->new();
@@ -258,7 +258,7 @@ eval { # load data, rollback if errors
         $row++;
         next();
       }
-
+=not used
       my $temp_value;
       my $temp_cell = $worksheet2->get_cell($row, $col + 2);
       if ($temp_cell) {
@@ -268,7 +268,7 @@ eval { # load data, rollback if errors
       } elsif ($index <6){
         print STDERR "row with index $index: No value at time $time_value for type_id $temp2_cvterm_id \n";
       }
-
+=cut
 	    my $intensity_cell = $worksheet2->get_cell($row, $col+3);
 	    my $intensity_value;
 	    if ($intensity_cell) {
@@ -336,7 +336,7 @@ eval { # load data, rollback if errors
         $row++;
         next();
       }
-
+=not used
       my $temp_value;
       my $temp_cell = $worksheet3->get_cell($row, $col + 2);
       if ($temp_cell) {
@@ -346,7 +346,7 @@ eval { # load data, rollback if errors
       } elsif ($index <6){
         print STDERR "row with index $index: No value at time $time_value for type_id $temp3_cvterm_id \n";
       }
-
+=cut
       my $precipitation_cell = $worksheet3->get_cell($row, $col+3);
   #    if ($precipitation_cell && $precipitation_cell->value() == 0) {
   #      print STDERR "row with index $index: 0 value at time $time_value for type_id $temp3_cvterm_id is an artifact, skipping it \n";
@@ -443,7 +443,7 @@ sub insert_daylengths {
   print STDERR "Sensor_id = $sensor_id\n";
 
   my $day_stats_query =
-    "SELECT date_trunc('day', time) AS day, (EXTRACT(epoch FROM (max(time) - min(time)))/60)::int AS daylength
+    "SELECT date_trunc('day', time) AS day, to_char(EXTRACT(epoch FROM (max(time) - min(time)))/3600, 'FM999999999.00') AS daylength
     FROM measurement
     WHERE time > ? AND time <= ? AND type_id=? AND sensor_id IN (?) AND value > 0
     GROUP BY 1 ORDER BY 1";
