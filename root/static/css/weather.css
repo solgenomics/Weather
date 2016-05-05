@@ -1,0 +1,21 @@
+.clickable{
+    cursor: pointer;
+}
+
+.panel-heading span {
+	margin: -26px 15px 0 0;
+	font-size: 15px;
+}
+
+.panel-heading {
+    cursor: pointer;
+}
+
+.panel-heading a {
+    display: block;
+    padding: 10px 15px;
+}
+
+.panel-heading {
+    padding: 0;
+}
