@@ -22,8 +22,18 @@ function initialize_events() {
      var end_date = jQuery('#daterange').data('daterangepicker').endDate.format('YYYY-MM-DD');
      //var cap_types = jQuery('#types').val() || [];
      var types = jQuery('#types').val() || [];
+     var typeNames = [];
+     jQuery("#types > option").each(function(){
+       typeNames.push(jQuery(this).text());
+     });
+     var nameHash = {};
+     jQuery('#graphs_body').html("");
+     for (var i = 0; i < types.length; i++) {
+       nameHash[types[i]] = typeNames[i];
+       jQuery('#graphs_body').append("<div id="+types[i]+"></div>");
+     }
+
      var interval = jQuery('#interval label.active input').val()
-    // var restrict = jQuery('#restrict label.active input').val()
 
      var type_color = {
        temp: '#8C001A', //red
@@ -34,18 +44,11 @@ function initialize_events() {
        rain: '#428bca' //darker blue
      };
 
-     jQuery('#graphs_body').html("");
-     var numTypes = types.length;
-     for (var i = 0; i < numTypes; i++) {
-       //console.log("type number "+i+"="+types[i]);
-       jQuery('#graphs_body').append("<div id="+types[i]+"></div>");
-     }
-
-     var data = get_data(location, start_date, end_date, interval, type_color, types);
+     var data = get_data(location, start_date, end_date, interval, type_color, types, nameHash);
    });
 }
 
-function get_data(location, start_date, end_date, interval, type_color, types) {
+function get_data(location, start_date, end_date, interval, type_color, types, nameHash) {
   var spinner;
   jQuery.ajax( {
     url: '/rest/weather',
@@ -69,8 +72,8 @@ function get_data(location, start_date, end_date, interval, type_color, types) {
         jQuery('a[data-toggle="tab"]').on( 'shown.bs.tab', function (e) {
           $.fn.dataTable.tables( {visible: true, api: true} ).columns.adjust();
         } );
-        //console.log(JSON.stringify(response.values));
-        display_timeseries(response.values, response.metadata, type_color);
+        //console.log(JSON.stringify(response.stats));
+        display_timeseries(response.values, response.metadata, response.stats, type_color, nameHash);
         spinner.stop();
         jQuery('#working_modal').modal("hide");
 	    }
@@ -147,10 +150,12 @@ function display_tables(summary_data, raw_data, values, metadata, location, star
   });
 }
 
-function display_timeseries(data, metadata, type_color) {
+function display_timeseries(data, metadata, summary_data, type_color, nameHash) {
   for (var type in data) {
     if (data.hasOwnProperty(type)) {
       var type_hash = metadata[type];
+      var max_y_value = get_max_y(type, summary_data, nameHash);
+      var summary_array = summary_data[type];
       var averages = " averages in ";
       if (type_hash['interval'] == 'individual') { averages = " measurements in ";}
       var description = type_hash['interval'].capitalizeFirstLetter()+' '+type_hash['description'].toLowerCase()+averages+type_hash['unit']+', gathered by HOBO weather station at '+type_hash['location']+' betweeen '+type_hash['start_date']+' and '+type_hash['end_date']+'.';
@@ -162,6 +167,9 @@ function display_timeseries(data, metadata, type_color) {
         description: description,
         color: type_color[type],
         data: converted_data,
+        interpolate: 'step',
+        max_y: max_y_value,
+    //  y_rug: true,
         linked: true,
         full_width: true,
         height: 300,
@@ -210,6 +218,8 @@ function create_type_multiple_select(location) {
 	url: '/rest/types',
   data: {'location': location},
   success: function(response) {
+      console.log("response types="+response.types);
+      var locationTypes = response.types;
       jQuery('#types').html("");
       jQuery('#select_all').removeClass('disabled')
       var typesLength = response.types.length;
@@ -275,4 +285,15 @@ function create_daterangepicker(location,types) {
         alert("An error occurred initializing daterangepicker");
     }
   });
+}
+
+function get_max_y(type, summary_data, nameHash) {
+  var max;
+  var full_name = nameHash[type];
+  for (var i=0; i < summary_data.length; i++) {
+    if (full_name == summary_data[i][0]) {
+      max = summary_data[i][3];
+    }
+  }
+  return max;
 }
