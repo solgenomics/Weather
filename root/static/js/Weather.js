@@ -207,7 +207,7 @@ function create_radio_button_options() {
   jQuery('#interval_select_div').html(interval_html);
   var type_html ='<p>Select data types:</p><select multiple="" class="form-control disabled" id="types" name="1" style="min-width: 200px;overflow:auto;"></select><br><button class="btn btn-default btn-sm disabled" id="select_all" >Select All</button>';
   jQuery('#type_select_div').html(type_html);
-  var daterange_html = '<p>Select a date range (defaults to latest month available for the selected options):</p><input class="form-control input-sm disabled" type="text" id="daterange" name="daterange"/>';
+  var daterange_html = '<p>Select a date range (defaults to full range available for the selected options):</p><input class="form-control input-sm disabled" type="text" id="daterange" name="daterange"/>';
   jQuery('#daterange_select_div').html(daterange_html);
 //  var time_html = '<p>Restrict by time of day:</p><div class = "btn-group" data-toggle = "buttons" id="restrict"><label class = "btn btn-default active"><input type = "radio" name ="time_options" id = "both" value="both"> All measurements</label><label class = "btn btn-default"><input type = "radio" name = "time_options" id = "night" value="night"> Night only</label><label class = "btn btn-default"><input type = "radio" name = "time_options" id = "day" value="day"> Day only</label></div>'
 //  jQuery('#time_select_div').html(time_html);
@@ -257,6 +257,7 @@ function create_daterangepicker(location,types) {
   data: {'location': location, 'types': types},
   success: function(response) {
 
+      var daterange_html = '<p>Select a date range (defaults to full range available for the selected options):</p><input class="form-control input-sm" type="text" id="daterange" name="daterange"/>';
       jQuery('#daterange_select_div').html(daterange_html);
       var momentDate = moment(response.latest_date, 'YYYY-MM-DD');  // take max date and get date one month before
       var jsDate = momentDate.toDate();
