@@ -286,10 +286,11 @@ eval { # load data, rollback if errors
     }
 
     my($min_row, $max_row) = $worksheet2->row_range();
+    print STDERR " min row = $min_row and max row = $max_row\n";
     $row = $max_row;
     while (my $index_cell = $worksheet2->get_cell($row, $col)) { # starting with most recent measurements, iterate backwards to find the timestamp of latest nighttime intensity measurement (value of 0) to use in calculation of daylengths.
       my $index = $index_cell->value();
-
+      print STDERR "index = $index\n";
       my $time_cell = $worksheet2->get_cell($row, $col + 1);
       my $time_value = $time_cell->value();
       if (!$time_value) {
@@ -302,6 +303,7 @@ eval { # load data, rollback if errors
     	my $intensity_value;
     	if ($intensity_cell) {
     	  $intensity_value = $intensity_cell->value();
+        print STDERR "Iterating backwards, intensity_value at time $time_value = $intensity_value\n";
         if ($intensity_value == 0) {
           $end_time = $time_value;
           last();

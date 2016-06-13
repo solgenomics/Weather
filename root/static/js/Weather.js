@@ -257,7 +257,6 @@ function create_daterangepicker(location,types) {
   data: {'location': location, 'types': types},
   success: function(response) {
 
-      var daterange_html = '<p>Select a date range (defaults to latest month available for the selected options):</p><input class="form-control input-sm" type="text" id="daterange" name="daterange"/>';
       jQuery('#daterange_select_div').html(daterange_html);
       var momentDate = moment(response.latest_date, 'YYYY-MM-DD');  // take max date and get date one month before
       var jsDate = momentDate.toDate();
@@ -269,7 +268,8 @@ function create_daterangepicker(location,types) {
             format: 'YYYY-MM-DD'
           },
           "autoApply": true,
-          "startDate": moment(jsDate).format('YYYY-MM-DD'),
+        //  "startDate": moment(jsDate).format('YYYY-MM-DD'),
+          "startDate": response.earliest_date,
           "endDate": response.latest_date,
           "minDate": response.earliest_date,
           "maxDate": response.latest_date,
