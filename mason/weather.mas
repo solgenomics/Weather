@@ -108,7 +108,7 @@ $location => 'not_provided'
 <script>
 jQuery(document).ready(function() {
 create_location_select_box();
-if (<% $location %>) {
+if (<% $location %> != 'not_provided') {
   console.log("supplied location is:"+<% $location %>+"\n");
   jQuery('#location_select').html('<p>Select a location:</p><select class="form-control input-sm" id="location_select" autofocus="autofocus"><option>'+<% $location %>+'</option></select>');
   create_type_multiple_select(<% $location %>);
