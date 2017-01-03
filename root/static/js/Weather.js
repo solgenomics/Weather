@@ -184,7 +184,6 @@ function display_timeseries(data, metadata, summary_data, type_color, nameHash) 
 function create_location_select_box() {
   jQuery.ajax( {
 	url: '/rest/locations',
-  async: false,
 	success: function(response) {
       //console.log("locations= "+response);
       var select_html = '<p>Select a location:</p><select class="form-control input-sm" id="location_select" autofocus="autofocus"><option></option><option>' + response.join('</option><option>') + '</option></select>';
