@@ -108,9 +108,9 @@ $location => 'not_provided'
 <script>
 jQuery(document).ready(function() {
 create_location_select_box();
-if (<% $nd_geolocation %>) {
-  console.log("supplied location is:"+<% $nd_geolocation %>+"\n");
-  jQuery('#location_select').val(<% $nd_geolocation %>);
+if (<% $location %>) {
+  console.log("supplied location is:"+<% $location %>+"\n");
+  jQuery('#location_select').val(<% $location %>);
   jQuery('#types').focus();
 }
 initialize_events();
