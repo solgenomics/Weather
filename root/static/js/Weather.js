@@ -241,6 +241,7 @@ function create_type_multiple_select(location) {
           var types = jQuery(this).val();
           create_daterangepicker(location,types);
       });
+      jQuery('#types').focus();
     },
   	error: function(response) {
   	    alert("An error occurred initializing type multiple select");
