@@ -110,10 +110,7 @@ jQuery(document).ready(function() {
 create_location_select_box();
 var location = "<% $location %>";
 if (location != 'not_provided') {
-  console.log("supplied location is:"+location+"\n");
-  //jQuery('#location_select').html('<p>Select a location:</p><select class="form-control input-sm" id="location_select" autofocus="autofocus"><option>'+location+'</option></select>');
   jQuery('#location_select').val(location).change();
-  //jQuery('#types').focus();
 }
 initialize_events();
 });
