@@ -32,6 +32,7 @@ sub index :Path :Args(0) {
     my ( $self, $c ) = @_;
 
     # Hello World
+    $c->stash->{location} = $c->req->param('location') || 'not_provided';
     $c->stash->{template} = 'weather.mas';
 }
 

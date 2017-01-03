@@ -1,5 +1,6 @@
 
 <%args>
+$location => 'not_provided'
 </%args>
 
 <body>
@@ -106,7 +107,12 @@
 
 <script>
 jQuery(document).ready(function() {
-
+create_location_select_box();
+if (<% $nd_geolocation %>) {
+  console.log("supplied location is:"+<% $nd_geolocation %>+"\n");
+  jQuery('#location_select').val(<% $nd_geolocation %>);
+  jQuery('#types').focus();
+}
 initialize_events();
 });
 

@@ -13,7 +13,7 @@ function initialize_events() {
         $span.find('i').removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
     })
 
-  create_location_select_box();
+  //create_location_select_box();
   create_radio_button_options();
 
    jQuery('#submit').click( function() {
