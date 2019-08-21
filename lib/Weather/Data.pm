@@ -148,8 +148,8 @@ sub get_data {
 			my @measurements;
 			while (my ($time, $value) = $h->fetchrow_array()) {
 				push @measurements, { date => $time, value => $value };
-				%raw_hash -> {$type} -> {$time} = $value;
-    	}
+				$raw_hash{$type}->{$time} = $value;
+    	                }
 
 			my $summary_q = "SELECT to_char(min(value), $sigfig_selects->{$type}), to_char(max(value), $sigfig_selects->{$type}), to_char(avg(value), $sigfig_selects->{$type}), to_char(stddev(value), $sigfig_selects->{$type}), to_char(sum(value), $sigfig_selects->{$type}) FROM (" . $normal_select . $from . ") base_query";
 
@@ -162,7 +162,7 @@ sub get_data {
 
 			push @stats, [ $description, $unit, $min, $max, $average, $std_dev, $total, $self->location(), $start_date, $end_date, $interval ];
 			$values -> {$type} = \@measurements;
-			%raw_hash -> {$type} -> {$type} = $description;
+			$raw_hash{$type} -> {$type} = $description;
 		}
 
 		my @raw_data;
