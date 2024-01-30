@@ -62,7 +62,7 @@
           </p>
         <li>
           <span class="glyphicon glyphicon-home" aria-hidden="true"></span><i> Hosted by</i>
-          <a href="http://bti.cornell.edu/" class="footer"><img width="240" alt="Boyce Thompson Institute" src="/static/img/bti_logo_2016.png" title="Boyce Thompson Institute" border="0" style="padding-bottom:2px"/></a>
+          <a href="https://btiscience.org/" class="footer"><img width="240" alt="Boyce Thompson Institute" src="/static/img/bti_logo_2024.png" title="Boyce Thompson Institute" border="0" style="padding-bottom:2px"/></a>
         <li>
           <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span><i> Funding from</i>
           <a href="http://www.dfid.gov.uk/" class="footer"><img width="80" alt="UK Aid" src="/static/img/uk_aid.png" title="UK Aid" border="0" style="padding-top:15px"/></a>
