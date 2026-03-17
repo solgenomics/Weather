@@ -1,0 +1,128 @@
+FROM debian:trixie
+
+EXPOSE 8080
+
+RUN mkdir -p /home/production/public/sgn_static_content
+RUN mkdir -p /home/production/cxgn
+RUN mkdir -p /home/production/cxgn/local-lib
+RUN mkdir /etc/starmachine
+RUN mkdir /var/log/sgn
+
+WORKDIR /home/production/cxgn
+
+# install system dependencies
+#
+RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+RUN apt-get update -y --allow-unauthenticated
+RUN apt-get upgrade -y
+RUN apt-get install build-essential pkg-config apt-utils gnupg2 curl wget -y
+
+# for R cran-40
+#
+RUN bash -c "apt-key adv --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7' 1>/key.out 2> /key.err"
+
+
+# add cran backports repo and required deps
+#
+RUN echo "deb https://cloud.r-project.org/bin/linux/debian/ bullseye-cran40/" >> /etc/apt/sources.list
+
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ bullseye-pgdg main" | tee  /etc/apt/sources.list.d/pgdg.list
+
+RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc |  apt-key add -
+
+RUN apt-get update --fix-missing -y
+#RUN apt-get update -y;
+
+RUN apt-get install -y aptitude
+
+RUN aptitude install -y npm libimage-magick-perl libimage-exiftool-perl libterm-readline-zoid-perl nginx starman emacs gedit vim less sudo htop git dkms linux-headers-generic perl-doc ack make xutils-dev nfs-common lynx xvfb ncbi-blast+ primer3 libmunge-dev libmunge2 munge slurm-wlm slurmctld slurmd libslurm-perl libssl-dev graphviz lsof imagemagick mrbayes muscle clustalw bowtie bowtie2 postfix mailutils libcupsimage2 postgresql-client-12 libglib2.0-dev libglib2.0-bin screen apt-transport-https libgdal-dev libproj-dev libudunits2-dev locales locales-all rsyslog cron libnlopt0 plink
+
+# Set the locale correclty to UTF-8
+RUN locale-gen en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8
+
+RUN curl -L https://cpanmin.us | perl - --sudo App::cpanminus
+
+RUN rm /etc/munge/munge.key
+
+RUN chmod 777 /var/spool/ \
+    && mkdir /var/spool/slurmstate \
+    && chown slurm:slurm /var/spool/slurmstate/ \
+    && /usr/sbin/mungekey \
+    && ln -s /var/lib/slurm-llnl /var/lib/slurm \
+    && mkdir -p /var/log/slurm
+
+RUN apt-get install r-base r-base-dev -y --allow-unauthenticated
+
+# required for R-package spdep, and other dependencies of agricolae
+#
+RUN apt-get install libudunits2-dev libproj-dev libgdal-dev -y
+
+# XML::Simple dependency
+#
+RUN apt-get install libexpat1-dev -y
+
+# HTML::FormFu
+#
+RUN apt-get install libcatalyst-controller-html-formfu-perl -y
+
+# Cairo Perl module needs this:
+#
+RUN apt-get install libcairo2-dev -y
+
+# GD Perl module needs this:
+#
+RUN apt-get install libgd-dev -y
+
+# postgres driver DBD::Pg needs this:
+#
+RUN apt-get install libpq-dev -y
+
+# MooseX::Runnable Perl module needs this:
+#
+RUN apt-get install libmoosex-runnable-perl -y
+
+RUN apt-get install libgdbm6 libgdm-dev -y
+RUN apt-get install nodejs -y
+
+RUN cpanm Selenium::Remote::Driver@1.49
+
+ADD cxgn /home/production/Weather
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# npm install needs a non-root user (new in latest version)
+#
+RUN adduser --disabled-password --gecos "" -u 1250 production && chown -R production /home/production
+
+WORKDIR /home/production/
+
+ENV PERL5LIB=/home/production/Weather/lib
+
+ENV HOME=/home/production
+ENV PGPASSFILE=/home/production/.pgpass
+
+ARG CREATED
+ARG REVISION
+ARG BUILD_VERSION
+
+ENV VERSION=${BUILD_VERSION}
+ENV BUILD_DATE=${CREATED}
+
+LABEL maintainer="lam87@cornell.edu"
+LABEL org.opencontainers.image.created=$CREATED
+LABEL org.opencontainers.image.url="https://weather.breedbase.org/"
+LABEL org.opencontainers.image.source="https://github.com/solgenomics/Weather"
+LABEL org.opencontainers.image.version=$BUILD_VERSION
+LABEL org.opencontainers.image.revision=$REVISION
+LABEL org.opencontainers.image.vendor="Boyce Thompson Institute"
+LABEL org.opencontainers.image.title="breedbase/weather"
+LABEL org.opencontainers.image.description="Breedbase weather data server"
+LABEL org.opencontainers.image.documentation="https://solgenomics.github.io/weather/"
+
+
+
+# start services when running container...
+#
+ENTRYPOINT ["/entrypoint.sh"]
